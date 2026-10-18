@@ -38,3 +38,49 @@ export function parseSRT(raw: string): Cue[] {
     .filter((cue): cue is Cue => cue !== null)
     .sort((a, b) => a.start - b.start);
 }
+
+
+/**
+ * Gộp các mốc cực ngắn (vài chục ms) liền kề thành một dòng đọc được,
+ * chỉ phục vụ hiển thị. Mốc gốc vẫn được giữ nguyên cho timing.
+ */
+export function mergeCuesForDisplay(cues: Cue[]): Cue[] {
+  if (!cues.length) return [];
+  const norm = (value: string) => value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  const out: Cue[] = [];
+  let group: Cue = { ...cues[0] };
+  let texts: string[] = [cues[0].text];
+
+  const flush = () => {
+    out.push({ ...group, text: texts.join(" ") });
+  };
+
+  for (let i = 1; i < cues.length; i += 1) {
+    const next = cues[i];
+    const gap = next.start - group.end;
+    const groupDuration = group.end - group.start;
+    const nextDuration = next.end - next.start;
+    const prospective = next.end - group.start;
+    const canMerge =
+      gap <= 0.16 &&
+      prospective <= 0.5 &&
+      (groupDuration <= 0.26 || nextDuration <= 0.26);
+    if (!canMerge) {
+      flush();
+      group = { ...next };
+      texts = [next.text];
+      continue;
+    }
+    group = { ...group, end: Math.max(group.end, next.end) };
+    const seen = new Set(texts.map(norm));
+    if (!seen.has(norm(next.text))) texts.push(next.text);
+  }
+  flush();
+
+  // Bỏ mốc "nháy" vài chục ms nếu mốc kế tiếp có đúng nội dung đó.
+  return out.filter((cue, index) => {
+    const next = out[index + 1];
+    const tooShort = cue.end - cue.start < 0.12;
+    return !(tooShort && next && norm(next.text) === norm(cue.text));
+  });
+}

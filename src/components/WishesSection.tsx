@@ -5,6 +5,7 @@ import { audio } from "../lib/audio";
 import { burst } from "../lib/fx";
 import { onFrame, prefersReducedMotion } from "../lib/loop";
 import { createBag } from "../lib/utils";
+import { isLite } from "../lib/perf";
 
 type Phase = "arrive" | "hold" | "grow" | "vanish";
 type Wish = { id: number; text: string; phase: Phase; lane: number; quick?: boolean };
@@ -47,6 +48,9 @@ export default function WishesSection() {
   const bagRef = useRef(createBag<string>(CONFIG.messages));
   const [card, setCard] = useState<Wish | null>(null);
   const [paused, setPaused] = useState(false);
+  const lite = isLite();
+  const visibleStars = lite ? FLYING_STARS.slice(0, 4) : FLYING_STARS;
+  const dustCount = lite ? 8 : 14;
 
   const publish = useCallback(() => {
     const state = wishRef.current;
@@ -220,7 +224,7 @@ export default function WishesSection() {
           <div className="wish-orbit wish-orbit--two" aria-hidden="true" />
           <div className="wish-orbit wish-orbit--three" aria-hidden="true" />
           <div className="wish-stars" aria-hidden="true">
-            {Array.from({ length: 38 }, (_, i) => (
+            {Array.from({ length: lite ? 22 : 38 }, (_, i) => (
               <span
                 key={i}
                 style={{
@@ -254,7 +258,7 @@ export default function WishesSection() {
             <span>✧</span>
           </div>
 
-          {FLYING_STARS.map((star, index) => (
+          {visibleStars.map((star, index) => (
             <button
               type="button"
               className="wish-star"
@@ -316,7 +320,7 @@ export default function WishesSection() {
                   </span>
                 </span>
                 <span className="wish-card__ripple" aria-hidden="true" />
-                {Array.from({ length: 14 }, (_, i) => (
+                {Array.from({ length: dustCount }, (_, i) => (
                   <span
                     className="wish-dust"
                     key={i}

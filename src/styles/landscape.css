@@ -820,3 +820,261 @@
     font-size: clamp(4rem, 26vmin, 8rem);
   }
 }
+
+
+/* ---- Mở màn không chữ: chỉ nhịp thở, vòng sáng và hạt (nhạc đã chạy) ---- */
+.cinema-prelude {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.cinema-prelude.is-hidden {
+  opacity: 0;
+}
+
+.cinema-prelude__halo {
+  position: absolute;
+  width: min(56vmin, 440px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 224, 240, 0.2), rgba(255, 190, 224, 0.08) 42%, transparent 68%);
+  animation: preludeBreathe 3.2s ease-in-out infinite;
+}
+
+.cinema-prelude__ring {
+  position: absolute;
+  width: min(40vmin, 320px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 230, 242, 0.2);
+  animation: preludeRing 4.8s ease-out infinite;
+}
+
+.cinema-prelude__ring--two {
+  animation-delay: 2.4s;
+  border-color: rgba(255, 224, 190, 0.16);
+}
+
+.cinema-prelude__orb {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffe9c6;
+  box-shadow: 0 0 18px 5px rgba(255, 226, 180, 0.45);
+  animation: preludeOrb 7s ease-in-out infinite;
+}
+
+.cinema-prelude__orb--two {
+  background: #ffc8de;
+  box-shadow: 0 0 18px 5px rgba(255, 178, 214, 0.4);
+  animation-delay: 2.6s;
+  animation-duration: 9s;
+}
+
+@keyframes preludeBreathe {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes preludeRing {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+@keyframes preludeOrb {
+  0%,
+  100% {
+    transform: translate3d(-14vmin, 8vmin, 0);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translate3d(14vmin, -10vmin, 0);
+    opacity: 0.9;
+  }
+}
+
+/* Chữ bóng mờ phía sau lyric: tạo chiều sâu nhưng không tranh chữ chính */
+.cinema-echo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: min(120vw, 1280px);
+  translate: -50% -50%;
+  font-family: "Poppins", "Baloo 2", sans-serif;
+  font-weight: 900;
+  font-size: clamp(3rem, min(15vw, 28dvh), 11rem);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  text-align: center;
+  color: rgba(255, 236, 246, 0.075);
+  text-shadow: 0 0 60px rgba(255, 200, 228, 0.2);
+  pointer-events: none;
+  animation: echoKick var(--beat, 0.6s) ease-out infinite;
+}
+
+@keyframes echoKick {
+  0% {
+    transform: scale(1.03);
+    opacity: 0.9;
+  }
+  18% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.03);
+    opacity: 0.85;
+  }
+}
+
+/* Chữ nền nhấp theo nhịp khi trái tim xuất hiện */
+.cinema-beatwords {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cinema-beatwords span {
+  position: absolute;
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.6rem, 5.2vw, 3.4rem);
+  letter-spacing: -0.03em;
+  color: rgba(255, 231, 243, 0.24);
+  text-shadow: 0 0 30px rgba(255, 196, 226, 0.32);
+  white-space: nowrap;
+  animation: beatWord var(--beat, 0.6s) cubic-bezier(0.2, 0.8, 0.3, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.cinema-beatwords span:nth-child(1) {
+  left: 6%;
+  top: 16%;
+  rotate: -8deg;
+}
+.cinema-beatwords span:nth-child(2) {
+  right: 7%;
+  top: 13%;
+  rotate: 6deg;
+  animation-delay: 0.15s;
+}
+.cinema-beatwords span:nth-child(3) {
+  left: 9%;
+  bottom: 16%;
+  rotate: 5deg;
+  animation-delay: 0.3s;
+}
+.cinema-beatwords span:nth-child(4) {
+  right: 8%;
+  bottom: 14%;
+  rotate: -7deg;
+  animation-delay: 0.45s;
+}
+.cinema-beatwords span:nth-child(5) {
+  left: 34%;
+  top: 7%;
+  font-size: clamp(1.1rem, 3.4vw, 2rem);
+  animation-delay: 0.22s;
+}
+.cinema-beatwords span:nth-child(6) {
+  right: 30%;
+  bottom: 7%;
+  font-size: clamp(1.1rem, 3.4vw, 2rem);
+  animation-delay: 0.37s;
+}
+
+.cinema-beatwords__giant {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%);
+  font-size: min(58vmin, 440px) !important;
+  line-height: 1;
+  color: rgba(255, 196, 224, 0.09) !important;
+  text-shadow: none !important;
+  animation: giantBeat var(--beat, 0.6s) ease-out infinite !important;
+}
+
+@keyframes beatWord {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  12% {
+    transform: scale(1.16);
+    opacity: 1;
+  }
+  34% {
+    transform: scale(1.02);
+    opacity: 0.72;
+  }
+}
+
+@keyframes giantBeat {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.55;
+  }
+  12% {
+    transform: translate(-50%, -50%) scale(1.08);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1.01);
+    opacity: 0.7;
+  }
+}
+
+.cinema-progress.is-heart span {
+  background: linear-gradient(90deg, #ffb4cf, #ffd9a6, #e7c6ff);
+}
+
+html[data-lite="true"] .cinema-prelude__ring,
+html[data-lite="true"] .cinema-prelude__orb,
+html[data-lite="true"] .cinema-echo,
+html[data-lite="true"] .cinema-beatwords span {
+  animation: none !important;
+}
+
+html[data-lite="true"] .cinema-beatwords__giant {
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cinema-prelude__halo,
+  .cinema-prelude__ring,
+  .cinema-prelude__orb,
+  .cinema-echo,
+  .cinema-beatwords span {
+    animation: none !important;
+  }
+  .cinema-beatwords span {
+    opacity: 0.35;
+  }
+}

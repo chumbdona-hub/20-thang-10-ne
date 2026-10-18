@@ -405,8 +405,8 @@
   }
 
   .girl-inner {
-    aspect-ratio: 0.76;
-    min-height: 218px;
+    aspect-ratio: 0.7;
+    min-height: 240px;
   }
 
   .girl-sticker {
@@ -432,10 +432,16 @@
   .girl-back__msg {
     font-size: 0.8rem;
     line-height: 1.45;
+    min-height: 4.4em;
   }
 
   .girl-back__quote {
     display: none;
+  }
+
+  .girls-readhint {
+    font-size: 0.65rem;
+    padding-inline: 0.7rem;
   }
 
   .wish-stage {
@@ -611,7 +617,27 @@
     font-size: 0.76rem;
   }
   .girl-inner {
-    min-height: 206px;
+    aspect-ratio: 0.66;
+    min-height: 234px;
+  }
+
+  .girl-back__heart {
+    display: none;
+  }
+
+  .girl-back__kicker {
+    font-size: 0.48rem;
+    letter-spacing: 0.1em;
+  }
+
+  .girl-back__for {
+    font-size: 0.54rem;
+  }
+
+  .girl-back__close {
+    min-height: 42px;
+    padding: 0.45rem 0.62rem;
+    font-size: 0.56rem;
   }
   .wish-card__msg {
     font-size: 0.96rem;
@@ -685,6 +711,7 @@
   }
 
   .girl-inner,
+  .girl-face,
   .girl-tilt,
   .hero-flower-tilt,
   .rose-scene,
@@ -693,8 +720,8 @@
     transition-duration: 0.25s !important;
   }
 
-  .girl-card.is-flipped .girl-inner {
-    transition-duration: 0.25s !important;
+  .girl-card.is-flipping .girl-inner {
+    animation-duration: 0.26s !important;
   }
 
   .wish-focus.phase-arrive {
@@ -735,5 +762,113 @@
   .gift-screen,
   .girl-sheen {
     transition-duration: 0.3s !important;
+  }
+}
+
+/* ============================================================
+   CHẾ ĐỘ LITE — tự bật khi máy yếu hoặc FPS thấp.
+   Giữ nguyên bố cục và màu sắc, chỉ bỏ hiệu ứng trang trí tốn kém.
+   ============================================================ */
+html[data-lite="true"] .bg-stars,
+html[data-lite="true"] .bg-stars,
+html[data-lite="true"] .gift-petal,
+html[data-lite="true"] .gift-halo__ring--dashed,
+html[data-lite="true"] .gift-box__shine,
+html[data-lite="true"] .rose-spark,
+html[data-lite="true"] .girl-sparkle,
+html[data-lite="true"] .balloon,
+html[data-lite="true"] .hero-butterfly,
+html[data-lite="true"] .butterfly-wing,
+html[data-lite="true"] .hero-teddy,
+html[data-lite="true"] .gift-teddy,
+html[data-lite="true"] .letter-bouquet__flower,
+html[data-lite="true"] .wish-galaxy,
+html[data-lite="true"] .wish-orbit,
+html[data-lite="true"] .wish-marquee span,
+html[data-lite="true"] .wish-star,
+html[data-lite="true"] .wish-star > span:first-child,
+html[data-lite="true"] .wish-focus__ring,
+html[data-lite="true"] .wish-dust,
+html[data-lite="true"] .shooting-star,
+html[data-lite="true"] .finale-fireflies span,
+html[data-lite="true"] .finale-moon::before {
+  animation: none !important;
+}
+
+html[data-lite="true"] .petal {
+  filter: none !important;
+  animation-duration: 0.9s !important;
+}
+
+html[data-lite="true"] .rose-svg,
+html[data-lite="true"] .mini-flower,
+html[data-lite="true"] .hero-teddy,
+html[data-lite="true"] .gift-teddy,
+html[data-lite="true"] .butterfly {
+  filter: none !important;
+}
+
+html[data-lite="true"] .gift-petals,
+html[data-lite="true"] .letter-petals,
+html[data-lite="true"] .wish-petals,
+html[data-lite="true"] .hero-butterfly,
+html[data-lite="true"] .balloon--two {
+  display: none;
+}
+
+html[data-lite="true"] .wish-card,
+html[data-lite="true"] .finale-letter,
+html[data-lite="true"] .glass {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(255, 248, 246, 0.9);
+}
+
+html[data-lite="true"] .finale-letter {
+  background: rgba(38, 20, 58, 0.72);
+}
+
+html[data-lite="true"] .gift-screen::before,
+html[data-lite="true"] .bg-grain {
+  display: none;
+}
+
+html[data-lite="true"] .cinema-sky::after,
+html[data-lite="true"] .cinema-flash {
+  animation: none !important;
+}
+
+/* Chữ nền vẫn đập theo nhạc trên máy yếu: chỉ là transform + opacity, rất nhẹ. */
+html[data-lite="true"] .cinema-skip {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-lite="true"] .cinema-beatwords span {
+  animation-duration: var(--beat, 0.6s) !important;
+}
+
+html[data-lite="true"] .gift-screen,
+html[data-lite="true"] .girl-tilt {
+  transition-duration: 0.2s !important;
+}
+
+html[data-lite="true"] .cinema-beatwords span {
+  animation: beatWord var(--beat, 0.6s) cubic-bezier(0.2, 0.8, 0.3, 1) infinite !important;
+}
+
+html[data-lite="true"] .cinema-beatwords .cinema-beatwords__giant {
+  animation: giantBeat var(--beat, 0.6s) ease-out infinite !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-lite="true"] .cinema-beatwords span,
+  html[data-lite="true"] .cinema-beatwords .cinema-beatwords__giant,
+  .cinema-beatwords span,
+  .cinema-echo {
+    animation: none !important;
+  }
+  html[data-lite="true"] .cinema-beatwords span {
+    opacity: 0.4;
   }
 }

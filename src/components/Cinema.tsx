@@ -4,8 +4,9 @@ import { CONFIG } from "../data/config";
 import { SRT_TEXT } from "../data/lyrics";
 import { audio } from "../lib/audio";
 import { onFrame, prefersReducedMotion } from "../lib/loop";
-import { parseSRT, type Cue } from "../lib/srt";
+import { mergeCuesForDisplay, parseSRT, type Cue } from "../lib/srt";
 import { clamp, easeOutCubic } from "../lib/utils";
+import { isLite } from "../lib/perf";
 
 type Props = { onClose: () => void };
 type Phase = "rotate" | "countdown" | "play";
@@ -64,8 +65,12 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
   const doneRef = useRef(false);
 
   const particles = useMemo(() => {
-    const isWeak = typeof navigator !== "undefined" && ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
-    const count = isWeak ? 1300 : 2100;
+    const lowPower = isLite();
+    const isMobile =
+      typeof window !== "undefined" &&
+      (window.matchMedia("(pointer: coarse)").matches || Math.min(window.innerWidth, window.innerHeight) < 700);
+    const isWeak = lowPower;
+    const count = lowPower ? 720 : isMobile ? 1050 : 1500;
     const heart: { x: number; y: number; z: number; size: number; color: string; seed: number }[] = [];
     for (let i = 0; i < count; i += 1) {
       const t = Math.random() * Math.PI * 2;
@@ -81,14 +86,14 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
         seed: Math.random() * Math.PI * 2,
       });
     }
-    const stars = Array.from({ length: 110 }, () => ({
+    const stars = Array.from({ length: isWeak ? 52 : 84 }, () => ({
       x: Math.random(),
       y: Math.random(),
       z: Math.random(),
       s: 0.4 + Math.random() * 1.6,
       phase: Math.random() * Math.PI * 2,
     }));
-    const petals = Array.from({ length: 34 }, () => ({
+    const petals = Array.from({ length: isWeak ? 14 : 26 }, () => ({
       x: Math.random(),
       y: Math.random(),
       sx: 0.2 + Math.random(),
@@ -98,9 +103,11 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
       color: ["#FFC1D7", "#FFE1ED", "#FFB3D1", "#E4D4FF"][Math.floor(Math.random() * 4)],
       phase: Math.random() * Math.PI * 2,
     }));
-    const orbit = Array.from({ length: 3 }, (_, ring) =>
-      Array.from({ length: 64 }, (_, i) => ({
-        angle: (i / 64) * Math.PI * 2,
+    const ringCount = isWeak ? 2 : 3;
+    const dotsPerRing = isWeak ? 40 : 58;
+    const orbit = Array.from({ length: ringCount }, (_, ring) =>
+      Array.from({ length: dotsPerRing }, (_, i) => ({
+        angle: (i / dotsPerRing) * Math.PI * 2,
         radius: 1 + ring * 0.12,
         tilt: ring * 0.65 + 0.4,
         speed: (ring % 2 === 0 ? 1 : -1) * (0.18 + ring * 0.05),
@@ -108,12 +115,13 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
         ring,
       })),
     );
-    const spiral = Array.from({ length: 90 }, (_, i) => ({
-      offset: i / 90,
-      angle: (i / 90) * Math.PI * 6,
+    const spiralCount = isWeak ? 38 : 72;
+    const spiral = Array.from({ length: spiralCount }, (_, i) => ({
+      offset: i / spiralCount,
+      angle: (i / spiralCount) * Math.PI * 6,
       radius: 1.5 + (i % 9) * 0.12,
     }));
-    return { heart, stars, petals, orbit, spiral, weak: isWeak };
+    return { heart, stars, petals, orbit, spiral, weak: isWeak, mobile: isMobile };
   }, []);
 
   useEffect(() => {
@@ -124,7 +132,10 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
     if (!ctx) return;
     let width = wrap.clientWidth || window.innerWidth;
     let height = wrap.clientHeight || window.innerHeight;
-    const ratio = Math.min(window.devicePixelRatio || 1, particles.weak ? 1.4 : 2);
+    const ratio = Math.min(window.devicePixelRatio || 1, particles.weak ? 1.1 : particles.mobile ? 1.25 : 1.75);
+    let bgGradient: CanvasGradient | null = null;
+    let coreGradient: CanvasGradient | null = null;
+    let heartGlow: CanvasGradient | null = null;
     const resize = () => {
       width = wrap.clientWidth || window.innerWidth;
       height = wrap.clientHeight || window.innerHeight;
@@ -133,6 +144,22 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      // Cache gradient theo kích thước: tránh tạo mới mỗi khung hình.
+      bgGradient = ctx.createRadialGradient(width / 2, height * 0.48, 10, width / 2, height * 0.5, Math.max(width, height) * 0.78);
+      bgGradient.addColorStop(0, "rgba(72, 35, 88, 0.18)");
+      bgGradient.addColorStop(0.55, "rgba(31, 15, 50, 0)");
+      bgGradient.addColorStop(1, "rgba(18, 8, 32, 0.35)");
+
+      coreGradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.min(width, height) * 0.55);
+      coreGradient.addColorStop(0, "rgba(255, 208, 232, 1)");
+      coreGradient.addColorStop(0.45, "rgba(255, 196, 226, 0.28)");
+      coreGradient.addColorStop(1, "rgba(255, 208, 232, 0)");
+
+      heartGlow = ctx.createRadialGradient(width / 2, height / 2, 10, width / 2, height / 2, Math.min(width, height) * 0.46);
+      heartGlow.addColorStop(0, "rgba(255, 132, 177, 1)");
+      heartGlow.addColorStop(0.55, "rgba(217, 112, 199, 0.34)");
+      heartGlow.addColorStop(1, "rgba(140, 84, 200, 0)");
     };
     resize();
     let resizeTimer = 0;
@@ -176,12 +203,10 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
       ctx.clearRect(0, 0, width, height);
 
       // ---- nền: sao, cánh hoa, vệt sáng theo chiều sâu
-      const gradient = ctx.createRadialGradient(width / 2, height * 0.48, 10, width / 2, height * 0.5, Math.max(width, height) * 0.78);
-      gradient.addColorStop(0, "rgba(72, 35, 88, 0.18)");
-      gradient.addColorStop(0.55, "rgba(31, 15, 50, 0)");
-      gradient.addColorStop(1, "rgba(18, 8, 32, 0.35)");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
+      if (bgGradient) {
+        ctx.fillStyle = bgGradient;
+        ctx.fillRect(0, 0, width, height);
+      }
 
       particles.stars.forEach((star) => {
         const twinkle = 0.32 + 0.55 * (0.5 + 0.5 * Math.sin(now * (1.2 + star.z) + star.phase));
@@ -208,11 +233,12 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
         ctx.restore();
       });
 
-      const coreGlow = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.min(width, height) * 0.55);
-      coreGlow.addColorStop(0, `rgba(255, 208, 232, ${0.05 + kick * 0.06})`);
-      coreGlow.addColorStop(1, "rgba(255, 208, 232, 0)");
-      ctx.fillStyle = coreGlow;
-      ctx.fillRect(0, 0, width, height);
+      if (coreGradient) {
+        ctx.globalAlpha = 0.24 + kick * 0.2;
+        ctx.fillStyle = coreGradient;
+        ctx.fillRect(0, 0, width, height);
+        ctx.globalAlpha = 1;
+      }
 
       if (!activeRefValue.current || now < lyricEnd - 0.05) {
         ctx.globalAlpha = 1;
@@ -230,16 +256,16 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
       const heartScale = baseScale * pulse * (1 - lastTwo * 0.35 + burst * 1.6);
       const rotationY = age * 0.3 + dragRot.current * 0.9 + 0.35;
 
-      if (!prefersReducedMotion()) {
+      if (!prefersReducedMotion() && !particles.weak) {
         ctx.globalCompositeOperation = "lighter";
       }
 
-      const glow = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, Math.min(width, height) * 0.46);
-      glow.addColorStop(0, `rgba(255, 132, 177, ${0.16 + kick * 0.1})`);
-      glow.addColorStop(0.6, "rgba(217, 112, 199, 0.06)");
-      glow.addColorStop(1, "rgba(140, 84, 200, 0)");
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, width, height);
+      if (heartGlow) {
+        ctx.globalAlpha = 0.3 + kick * 0.28;
+        ctx.fillStyle = heartGlow;
+        ctx.fillRect(0, 0, width, height);
+        ctx.globalAlpha = 1;
+      }
 
       // dòng xoắn ốc từ ngoài vào
       particles.spiral.forEach((dot) => {
@@ -317,7 +343,7 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
       });
 
       // các trái tim nhỏ bắn ra theo nhịp
-      if (kick > 0.72) {
+      if (kick > 0.72 && !particles.weak) {
         ctx.globalAlpha = (kick - 0.72) * 1.8;
         ctx.fillStyle = "#ffd6e7";
         for (let i = 0; i < 6; i += 1) {
@@ -338,8 +364,14 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
     };
 
     const activeRefValue = { current: active };
-    const stop = onFrame(() => {
+    let frameAcc = 0;
+    const stop = onFrame((dt) => {
       if (!active) return;
+      frameAcc += dt;
+      // Máy yếu: vẽ tối đa ~30fps, vẫn đủ mượt cho hạt và giảm tải GPU/CPU.
+      const minStep = particles.mobile || particles.weak ? 1 / 30 : 1 / 60;
+      if (frameAcc < minStep) return;
+      frameAcc = 0;
       draw();
     });
     return () => {
@@ -362,11 +394,14 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
 }
 
 export default function Cinema({ onClose }: Props) {
-  const cues = useMemo(() => parseSRT(SRT_TEXT), []);
-  const lyricEnd = cues.length ? cues[cues.length - 1].end : 33.3;
+  const rawCues = useMemo(() => parseSRT(SRT_TEXT), []);
+  // Chỉ để hiển thị: gộp vài mốc vài chục ms thành câu đọc được.
+  const cues = useMemo(() => mergeCuesForDisplay(rawCues), [rawCues]);
+  const lyricEnd = rawCues.length ? rawCues[rawCues.length - 1].end : 53.867;
   const heartStart = lyricEnd;
   const heartDuration = CONFIG.song.heartDuration;
-  const total = heartStart + heartDuration;
+  // Tổng cảnh phim đúng 59 giây: 8.633s mở màn không chữ + lyric + tim đập tới hết.
+  const total = Math.max(CONFIG.song.duration, heartStart + heartDuration);
 
   const initialLandscape =
     typeof window !== "undefined" ? window.matchMedia("(orientation: landscape)").matches || window.innerWidth > window.innerHeight : true;
@@ -392,7 +427,21 @@ export default function Cinema({ onClose }: Props) {
   const beatRef = useRef(-1);
   const stageRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLSpanElement>(null);
   const ready = landscape || forced;
+
+  // Thanh tiến độ chạy theo đồng hồ thật (59s), không re-render React mỗi khung hình.
+  useEffect(() => {
+    if (phase !== "play") return;
+    let acc = 0;
+    return onFrame((dt) => {
+      acc += dt;
+      if (acc < 0.08) return;
+      acc = 0;
+      const bar = progressRef.current;
+      if (bar) bar.style.transform = `scaleX(${clamp(timeRef.current / total).toFixed(4)})`;
+    });
+  }, [phase, total]);
 
   const cleanupEnvironment = useCallback(() => {
     document.body.classList.remove("no-scroll", "cinema-lock");
@@ -449,14 +498,19 @@ export default function Cinema({ onClose }: Props) {
   }, []);
 
   useEffect(() => {
-    const stop = onFrame((dt) => {
+    const stop = onFrame(() => {
       if (phase !== "play" || !runningRef.current || document.hidden) return;
       const songTime = audio.hasSong ? audio.songTime() : null;
       if (songTime !== null && songTime >= 0 && songTime < 600) {
         timeRef.current = songTime;
       } else {
-        timeRef.current = Math.min(total + 2, timeRef.current + Math.min(0.12, dt));
+        // Đồng hồ nội bộ dùng thời gian thực, không dùng dt của rAF (có thể bị kẹp
+        // khi máy lag, khiến "video" 59s chạy chậm hơn thực tế).
+        const wall = performance.now();
+        const delta = lastRef.current ? (wall - lastRef.current) / 1000 : 0;
+        timeRef.current = Math.min(total + 2, timeRef.current + Math.max(0, Math.min(0.8, delta)));
       }
+      lastRef.current = performance.now();
       const t = timeRef.current;
       if (t >= total) {
         runningRef.current = false;
@@ -586,7 +640,7 @@ export default function Cinema({ onClose }: Props) {
   }, [cleanupEnvironment, finish]);
 
   const variantIndex = current ? current.index % ENTER_VARIANTS.length : 0;
-  const palette = current ? current.index % 6 : 0;
+  const palette = heartVisible ? 5 : current ? current.index % 6 : Math.min(5, Math.floor(timeRef.current / 1.6) % 5);
 
   return (
     <div
@@ -614,7 +668,43 @@ export default function Cinema({ onClose }: Props) {
           <span className="cinema-shockwave" aria-hidden="true" />
 
           {phase === "play" && !heartVisible && (
+            <div className={`cinema-prelude${current ? " is-hidden" : ""}`} aria-hidden="true">
+              <span className="cinema-prelude__halo" />
+              <span className="cinema-prelude__ring" />
+              <span className="cinema-prelude__ring cinema-prelude__ring--two" />
+              <span className="cinema-prelude__orb" />
+              <span className="cinema-prelude__orb cinema-prelude__orb--two" />
+            </div>
+          )}
+
+          {phase === "play" && heartVisible && (
+            <div
+              className="cinema-beatwords"
+              aria-hidden="true"
+              style={{ ["--beat" as string]: `${(60 / CONFIG.song.bpm).toFixed(3)}s` }}
+            >
+              <span>thương</span>
+              <span>11B7</span>
+              <span>rạng rỡ</span>
+              <span>20·10</span>
+              <span>dịu dàng</span>
+              <span>xinh</span>
+              <span className="cinema-beatwords__giant">♥</span>
+            </div>
+          )}
+
+          {phase === "play" && !heartVisible && (
             <div className="cinema-lyrics" aria-live="polite" aria-atomic="true">
+              {current && (
+                <span
+                  className="cinema-echo"
+                  aria-hidden="true"
+                  key={`echo-${current.index}`}
+                  style={{ ["--beat" as string]: `${(60 / CONFIG.song.bpm).toFixed(3)}s` }}
+                >
+                  {current.cue.text}
+                </span>
+              )}
               {prev && (
                 <div
                   className={`cinema-cue is-exiting cue-exit--${EXIT_VARIANTS[prev.variant]}`}
@@ -669,9 +759,9 @@ export default function Cinema({ onClose }: Props) {
             </div>
           )}
 
-          {phase === "play" && !heartVisible && current && (
-            <span className="cinema-progress" aria-hidden="true">
-              <span style={{ transform: `scaleX(${clamp(timeRef.current / lyricEnd)})` }} />
+          {phase === "play" && (
+            <span className={`cinema-progress${heartVisible ? " is-heart" : ""}`} aria-hidden="true">
+              <span ref={progressRef} />
             </span>
           )}
         </div>
@@ -680,7 +770,7 @@ export default function Cinema({ onClose }: Props) {
       <button type="button" className="cinema-skip" onClick={finish} aria-label="Bỏ qua cảnh phim">
         Bỏ qua <span aria-hidden="true">⏭</span>
       </button>
-      {phase === "play" && (
+      {phase === "play" && heartVisible && (
         <p className="cinema-drag-hint" aria-hidden="true">
           kéo ngang để xoay trái tim
         </p>

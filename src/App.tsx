@@ -13,6 +13,7 @@ import { useReveal } from "./hooks/useReveal";
 import { audio } from "./lib/audio";
 import { enableSparkleTrail } from "./lib/fx";
 import { prefersReducedMotion } from "./lib/loop";
+import { initQuality } from "./lib/perf";
 
 export default function App() {
   const [giftOpened, setGiftOpened] = useState(false);
@@ -23,6 +24,10 @@ export default function App() {
   useReveal(giftOpened);
 
   // Báo loader tĩnh rằng ứng dụng đã sẵn sàng (kèm thời gian chờ an toàn).
+  useEffect(() => {
+    initQuality();
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const markReady = () => {

@@ -133,7 +133,8 @@ class AudioEngine {
     try {
       const now = this.ctx.currentTime;
       if (mood === "cinema") {
-        this.musicGain.gain.setTargetAtTime(0.001, now, 0.5);
+        // Rất khẽ: nếu có song.mp3 thì bài hát nổi lên, nếu chưa có file thì phần mở màn vẫn có nhạc.
+        this.musicGain.gain.setTargetAtTime(0.14, now, 0.8);
       } else {
         this.musicGain.gain.setTargetAtTime(0.5, now, 0.9);
       }
@@ -367,6 +368,11 @@ class AudioEngine {
         this.songGain = gain;
       }
       this.triedSong = true;
+      try {
+        if (this.songEl) this.songEl.currentTime = 0;
+      } catch {
+        /* file chưa sẵn sàng */
+      }
       this.songGain?.gain.setTargetAtTime(0.9, this.ctx.currentTime, 0.6);
       void this.songEl.play().catch(() => {
         this.songReady = false;

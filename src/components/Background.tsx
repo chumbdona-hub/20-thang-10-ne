@@ -25,14 +25,29 @@ export default function Background({ active }: { active: boolean }) {
     const stage = stageRef.current;
     let acc = 1;
 
-    const update = () => {
+    let points: { center: number }[] = [];
+    const measure = () => {
       const sections = Array.from(document.querySelectorAll<HTMLElement>("[data-theme-anchor]"));
-      if (!sections.length) return;
-      const focus = window.scrollY + window.innerHeight * 0.46;
-      const points = sections.map((el) => {
+      points = sections.map((el) => {
         const rect = el.getBoundingClientRect();
-        return { center: rect.top + window.scrollY + rect.height * 0.46, top: rect.top + window.scrollY };
+        return { center: rect.top + window.scrollY + rect.height * 0.46 };
       });
+    };
+    measure();
+    let measureTimer = 0;
+    const scheduleMeasure = () => {
+      window.clearTimeout(measureTimer);
+      measureTimer = window.setTimeout(measure, 220);
+    };
+    window.addEventListener("resize", scheduleMeasure, { passive: true });
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(scheduleMeasure) : null;
+    const main = document.getElementById("main");
+    if (main) resizeObserver?.observe(main);
+
+    const update = () => {
+      if (!points.length) return;
+      const focus = window.scrollY + window.innerHeight * 0.46;
       let index = 0;
       while (index < points.length - 1 && focus > points[index + 1].center) index += 1;
       let t = 0;
@@ -71,11 +86,16 @@ export default function Background({ active }: { active: boolean }) {
     update();
     const stop = onFrame((dt) => {
       acc += dt;
-      if (acc < 0.045) return;
+      if (acc < 0.07) return;
       acc = 0;
       update();
     });
-    return stop;
+    return () => {
+      stop();
+      window.clearTimeout(measureTimer);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", scheduleMeasure);
+    };
   }, [active]);
 
   return (

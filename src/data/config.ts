@@ -7,7 +7,9 @@ export const CONFIG = {
     url: "assets/audio/song.mp3",
     bpm: 100,
     beatOffset: 0,
-    heartDuration: 8,
+    // Cảnh phim dài đúng 59 giây: lyric cuối kết thúc ~53.87s, tim đập ~5.13s cuối.
+    duration: 59,
+    heartDuration: 5.133,
   },
   girls: [
     "Mai Thị Vân Anh",

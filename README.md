@@ -103,11 +103,14 @@ song: {
   url: "assets/audio/song.mp3",
   bpm: 100,          // nhịp mỗi phút, dùng cho hiệu ứng nhấp nháy và trái tim đập
   beatOffset: 0,     // lệch phách đầu (giây), tăng/giảm để khớp bản nhạc
-  heartDuration: 8,  // số giây trái tim hạt xoay và đập
+  duration: 59,      // tổng độ dài "cảnh phim" (giây)
+  heartDuration: 5.133, // 5.13s cuối: trái tim hạt xuất hiện & đập theo nhịp
 }
 ```
 
 Mốc thời gian lyric được tính tự động từ dữ liệu SRT trong `src/data/lyrics.ts`; không cần sửa tay. Khi thay file SRT, chỉ cần giữ nguyên định dạng `HH:MM:SS,mmm --> HH:MM:SS,mmm`.
+
+Bản SRT hiện tại có phụ đề từ **8,633s** đến **53,867s**. Vì vậy cảnh phim bắt đầu bằng **8,6 giây mở màn không chữ, chỉ có nhạc và hiệu ứng nền**, rồi lyric mới xuất hiện. Khi lyric kết thúc, trái tim hạt 3D hiện ra, đập theo nhịp và biến mất ở giây thứ **59**. Nếu thay SRT dài/ngắn hơn, hãy đặt `duration` lớn hơn mốc cuối một chút (ví dụ 59) và chỉnh `heartDuration` tương ứng.
 
 ---
 
@@ -156,6 +159,8 @@ Sau khi sửa, chạy lại `npm run dev` (hoặc `npm run build`).
 - Tôn trọng `prefers-reduced-motion`; thiếu API (Fullscreen, Orientation lock, vibrate…) thì bỏ qua êm.
 - Ảnh hoa 3D nhiều lớp cánh xếp xoắn ốc, có hiệu ứng nở, nghiêng theo con trỏ, kéo để xoay và chạm để hoa rung.
 - Lời chúc luôn hiển thị **một thẻ tại một thời điểm** trong sân khấu riêng, không thể chồng chữ lên nhau hay tràn lên tiêu đề.
+- Thẻ của các bạn nữ **giữ nguyên lời nhắn** sau khi mở, chỉ gấp lại khi người xem bấm nút “Đọc xong rồi, gấp lại”. Mỗi lúc chỉ render một mặt thẻ (không dùng `backface-visibility` hay hai mặt chồng lên nhau), nên lời nhắn luôn hiển thị trên Safari/iOS và mọi trình duyệt di động.
+- Chế độ **lite** tự bật khi máy yếu (RAM/CPU thấp) hoặc khi FPS tụt dưới ~44: giảm số hạt, hạ DPR canvas, vẽ 30fps, tắt các animation trang trí và `backdrop-filter`. Nội dung và hiệu ứng chính vẫn giữ nguyên.
 - Không sử dụng `localStorage`/`sessionStorage`.
 
 Chúc các bạn gái 11B7 một ngày 20/10 thật rạng rỡ. 💐

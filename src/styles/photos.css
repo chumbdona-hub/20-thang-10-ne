@@ -1,0 +1,192 @@
+/* photos.css — khung ảnh dùng chung: ô tạm pastel, crossfade "rửa ảnh", khung SVG. */
+.photo-frame {
+  --frame-a: #ffe7f0;
+  --frame-b: #ffc7db;
+  --frame-ink: #b53e64;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(85% 70% at 50% 10%, rgba(255, 255, 255, 0.92), transparent 66%),
+    linear-gradient(158deg, var(--frame-a), var(--frame-b));
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 12px 26px -16px rgba(122, 52, 78, 0.55), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.photo-frame--rose { --frame-a: #ffedf3; --frame-b: #ffc9dc; --frame-ink: #b53e64; }
+.photo-frame--butter { --frame-a: #fff8e6; --frame-b: #ffe6b4; --frame-ink: #a7722c; }
+.photo-frame--lilac { --frame-a: #f6f0ff; --frame-b: #e0d1ff; --frame-ink: #7b5bb0; }
+.photo-frame--mint { --frame-a: #f0fcf6; --frame-b: #c9eedd; --frame-ink: #3f8266; }
+.photo-frame--peach { --frame-a: #fff6ef; --frame-b: #ffdcc8; --frame-ink: #b7673f; }
+.photo-frame--sky { --frame-a: #f1f8ff; --frame-b: #d4e8ff; --frame-ink: #4b75a0; }
+.photo-frame--gold { --frame-a: #fffaf0; --frame-b: #ffe6b0; --frame-ink: #9a6a20; }
+
+.photo-frame--circle { border-radius: 50%; }
+.photo-frame--arch { border-radius: 50% 50% 12px 12px; }
+.photo-frame--heart { border-radius: 50% 50% 46% 46%; }
+.photo-frame--square { border-radius: 12px; }
+
+.photo-frame__placeholder {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  color: var(--frame-ink);
+}
+
+.photo-frame__initial {
+  font-family: var(--font-script);
+  font-weight: 700;
+  font-size: 2.4em;
+  line-height: 1;
+  opacity: 0.8;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.65);
+}
+
+.photo-frame__flower {
+  position: absolute;
+  left: 8%;
+  top: 8%;
+  font-size: 0.6em;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 6px rgba(150, 60, 90, 0.2);
+}
+
+.photo-frame__flower--corner {
+  left: auto;
+  right: 10%;
+  bottom: 9%;
+  top: auto;
+  z-index: 3;
+  font-size: 0.62em;
+  color: rgba(255, 247, 252, 0.9);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.photo-frame.is-ready .photo-frame__flower--corner {
+  opacity: 0.85;
+}
+
+.photo-frame__ring {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  bottom: 4px;
+  left: 4px;
+  border-radius: inherit;
+  border: 1px dashed rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.photo-frame__img,
+.photo-frame__svg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  -o-object-fit: cover;
+  object-position: var(--photo-focus, 50% 25%);
+  opacity: 0;
+  transform: scale(1.05);
+  transition: opacity 0.8s ease, transform 0.8s ease, filter 0.8s ease;
+  will-change: opacity, transform;
+  z-index: 2;
+}
+
+.photo-frame__svg {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.photo-frame.is-ready .photo-frame__img,
+.photo-frame.is-ready .photo-frame__svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.photo-frame.is-mounted .photo-frame__img {
+  animation: photoDevelop 0.8s ease both;
+}
+
+@keyframes photoDevelop {
+  0% {
+    opacity: 0;
+    filter: sepia(0.7) brightness(1.14) saturate(0.6);
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    filter: none;
+    transform: scale(1);
+  }
+}
+
+.photo-frame__shine {
+  position: absolute;
+  top: -30%;
+  bottom: -30%;
+  left: -60%;
+  width: 40%;
+  z-index: 4;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-14deg);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.photo-frame.is-shining .photo-frame__shine {
+  animation: photoShine 0.9s ease-out both;
+}
+
+@keyframes photoShine {
+  0% {
+    opacity: 0;
+    transform: translateX(0) skewX(-14deg);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(420%) skewX(-14deg);
+  }
+}
+
+/* Ô tạm dùng cho polaroid/mosaic chưa có ảnh */
+.photo-placeholder-tile {
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(80% 70% at 50% 12%, rgba(255, 255, 255, 0.9), transparent 66%),
+    linear-gradient(155deg, var(--frame-a, #ffedf3), var(--frame-b, #ffc9dc));
+  color: var(--frame-ink, #b53e64);
+  font-family: var(--font-script);
+  font-weight: 700;
+}
+
+html[data-lite="true"] .photo-frame.is-ready .photo-frame__img,
+html[data-lite="true"] .photo-frame.is-ready .photo-frame__svg {
+  transition-duration: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-frame__img,
+  .photo-frame__svg,
+  .photo-frame.is-mounted .photo-frame__img {
+    transition-duration: 0.2s !important;
+    animation: none !important;
+  }
+}

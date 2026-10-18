@@ -23,7 +23,11 @@ type SfxName =
   | "letter-tick"
   | "star"
   | "plant"
-  | "teacher";
+  | "teacher"
+  | "photo-in"
+  | "swish"
+  | "mosaic-pop"
+  | "film";
 
 const MOODS: Record<Mood, { base: number; octave: number; bell: boolean; pad: number }> = {
   hero: { base: 523.25, octave: 1, bell: false, pad: 0.03 },
@@ -52,6 +56,9 @@ class AudioEngine {
   private songReady = false;
   private triedSong = false;
   private hiddenPaused = false;
+  private analyser: AnalyserNode | null = null;
+  private freqData: Uint8Array | null = null;
+  private levelsCache = { bass: 0, mid: 0, high: 0, beat: 0, bands: [0, 0, 0, 0, 0, 0, 0, 0] as number[], at: 0 };
 
   get isStarted() {
     return this.started && this.ctx?.state === "running";
@@ -93,6 +100,17 @@ class AudioEngine {
       feedback.connect(this.delay);
       this.delay.connect(wet);
       wet.connect(this.master);
+
+      // Analyser dùng chung để lấy năng lượng thật cho quả cầu (chỉ để đọc, không nối ra loa).
+      try {
+        this.analyser = ctx.createAnalyser();
+        this.analyser.fftSize = 256;
+        this.analyser.smoothingTimeConstant = 0.78;
+        this.freqData = new Uint8Array(this.analyser.frequencyBinCount);
+        this.musicGain.connect(this.analyser);
+      } catch {
+        this.analyser = null;
+      }
 
       const len = Math.floor(ctx.sampleRate * 0.6);
       this.noise = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -378,6 +396,21 @@ class AudioEngine {
           this.tone("teacher", f, 1.4, { gain: 0.032, delay: i * 0.14 }),
         );
         break;
+      case "photo-in":
+        this.noiseHit(0.035, 0.16, 2400);
+        [1046.5, 1318.5].forEach((f, i) => this.tone("photo-in", f, 0.32, { gain: 0.016, delay: i * 0.06 }));
+        break;
+      case "swish":
+        this.noiseHit(0.022, 0.28, 1200);
+        this.tone("swish", 520, 0.22, { type: "sine", gain: 0.014, to: 300 });
+        break;
+      case "mosaic-pop":
+        this.tone("mosaic-pop", 760 + up * 80, 0.12, { type: "triangle", gain: 0.028, to: 1180 });
+        break;
+      case "film":
+        this.noiseHit(0.02, 0.4, 900);
+        this.tone("film", 392, 0.5, { type: "sine", gain: 0.025, to: 523.25 });
+        break;
       default:
         break;
     }
@@ -409,6 +442,7 @@ class AudioEngine {
           try {
             const source = this.ctx.createMediaElementSource(el);
             source.connect(gain);
+            if (this.analyser) gain.connect(this.analyser);
           } catch {
             /* Safari cũ: vẫn phát qua phần tử audio */
           }
@@ -497,6 +531,60 @@ class AudioEngine {
   songTime(): number | null {
     if (!this.songEl || !this.songReady) return null;
     return this.songEl.currentTime;
+  }
+
+  /** Năng lượng âm nhạc 0–1 cho hiệu ứng quả cầu. Có analyser thì dùng số thật. */
+  levels() {
+    const now = (typeof performance !== "undefined" ? performance.now() : Date.now());
+    const cache = this.levelsCache;
+    if (now - cache.at < 32) return cache;
+    cache.at = now;
+    let bass = 0;
+    let mid = 0;
+    let high = 0;
+    try {
+      if (this.analyser && this.freqData && this.ctx && this.ctx.state === "running") {
+        this.analyser.getByteFrequencyData(this.freqData as Uint8Array<ArrayBuffer>);
+        const n = this.freqData.length;
+        const bands: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
+        for (let i = 0; i < n; i += 1) {
+          const value = this.freqData[i] / 255;
+          const index = Math.min(7, Math.floor((i / n) * 8));
+          bands[index] += value;
+        }
+        for (let b = 0; b < 8; b += 1) {
+          bands[b] = Math.min(1, bands[b] / Math.max(1, n / 8) * 2.1);
+          const weight = 1 - Math.abs(b - 1.6) / 8;
+          if (b <= 2) bass += bands[b] * weight;
+          else if (b <= 5) mid += bands[b] * weight;
+          else high += bands[b] * weight;
+        }
+        bass = Math.min(1, bass / 2.2);
+        mid = Math.min(1, mid / 2.4);
+        high = Math.min(1, high / 2.2);
+        cache.bands = bands;
+      }
+    } catch {
+      bass = 0;
+    }
+    const beatLength = 60 / CONFIG.song.bpm;
+    const wall = now / 1000 - CONFIG.song.beatOffset;
+    const beatPos = ((wall % beatLength) + beatLength) % beatLength;
+    const simulated = Math.exp(-beatPos * 6.5);
+    if (bass + mid + high < 0.02) {
+      const t = now / 1000;
+      bass = 0.34 + simulated * 0.42;
+      mid = 0.3 + 0.18 * Math.sin(t * 1.7);
+      high = 0.22 + 0.12 * Math.sin(t * 2.9 + 1);
+      const bands: number[] = [];
+      for (let b = 0; b < 8; b += 1) bands.push(Math.min(1, 0.22 + simulated * (0.5 - b * 0.045) + 0.14 * Math.sin(t * 2.2 + b)));
+      cache.bands = bands;
+    }
+    cache.bass += (bass - cache.bass) * 0.5;
+    cache.mid += (mid - cache.mid) * 0.45;
+    cache.high += (high - cache.high) * 0.4;
+    cache.beat = Math.max(simulated, (cache.bass * 0.7 + cache.mid * 0.3) * 0.9);
+    return cache;
   }
 
   pauseSong() {

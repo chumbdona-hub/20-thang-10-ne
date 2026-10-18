@@ -11,6 +11,16 @@ export const CONFIG = {
     duration: 59,
     heartDuration: 12.967,
   },
+  photos: {
+    dir: "assets/photos/",
+    ext: ["jpeg", "jpg", "png", "webp"],
+    maxSide: 1024,
+    thumbSide: 256,
+  },
+  // slug -> "50% 25%" để chỉnh điểm lấy nét cho từng ảnh
+  photoFocus: {} as Record<string, string>,
+  // Cô giáo chỉ xuất hiện trong màn hình lời chúc riêng, mặc định không vào phim kỷ niệm
+  teacherInMovie: false,
   girls: [
     "Mai Thị Vân Anh",
     "Nguyễn Thị Tùng Chi",

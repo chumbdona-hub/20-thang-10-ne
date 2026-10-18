@@ -10,6 +10,9 @@ import GirlsSection from "./components/GirlsSection";
 import Hero from "./components/Hero";
 import LetterSection from "./components/LetterSection";
 import ProgressBar from "./components/ProgressBar";
+import PhotoWall from "./components/PhotoWall";
+import Gallery3D from "./components/Gallery3D";
+import HeartMosaic from "./components/HeartMosaic";
 import SectionBoundary from "./components/SectionBoundary";
 import WishesSection from "./components/WishesSection";
 import { useReveal } from "./hooks/useReveal";
@@ -17,6 +20,8 @@ import { audio } from "./lib/audio";
 import { enableSparkleTrail } from "./lib/fx";
 import { prefersReducedMotion } from "./lib/loop";
 import { initQuality } from "./lib/perf";
+import { CONFIG } from "./data/config";
+import { photos } from "./lib/photos";
 
 export default function App() {
   const [giftOpened, setGiftOpened] = useState(false);
@@ -29,6 +34,18 @@ export default function App() {
   // Báo loader tĩnh rằng ứng dụng đã sẵn sàng (kèm thời gian chờ an toàn).
   useEffect(() => {
     initQuality();
+    try {
+      const debug = /[?&]debug\b/.test(window.location.search);
+      if (debug) {
+        photos.debugReport(CONFIG.girls as unknown as string[]);
+        CONFIG.girls.forEach((name) => {
+          photos.load(name, "thumb").catch(() => undefined);
+        });
+        window.setTimeout(() => photos.debugReport([]), 4000);
+      }
+    } catch {
+      /* bỏ qua */
+    }
   }, []);
 
   useEffect(() => {
@@ -147,9 +164,12 @@ export default function App() {
           <Hero onOpenCinema={openCinema} />
           <LetterSection />
           <GirlsSection />
+          <SectionBoundary label="photo-wall"><PhotoWall /></SectionBoundary>
           <SectionBoundary label="constellation"><ConstellationSection /></SectionBoundary>
+          <SectionBoundary label="gallery"><Gallery3D /></SectionBoundary>
           <WishesSection />
           <SectionBoundary label="garden"><GardenSection /></SectionBoundary>
+          <SectionBoundary label="heart-mosaic"><HeartMosaic /></SectionBoundary>
           <FinaleSection />
         </main>
       )}

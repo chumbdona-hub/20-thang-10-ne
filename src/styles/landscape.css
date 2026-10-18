@@ -263,7 +263,8 @@
   color: #fff6fb;
   text-transform: none;
   text-shadow:
-    0 2px 0 rgba(63, 22, 56, 0.28),
+    0 2px 0 rgba(40, 14, 36, 0.45),
+    0 0 18px rgba(32, 10, 30, 0.55),
     0 0 24px rgba(255, 192, 224, 0.4),
     0 0 60px rgba(219, 124, 190, 0.24);
 }

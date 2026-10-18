@@ -9,7 +9,12 @@ const PALETTES: Palette[] = [
   { c1: "#FFB6C8", c2: "#FFD6E0", c3: "#FFF1E6", night: 0 },
   { c1: "#FFF1E6", c2: "#FFF1B8", c3: "#FFE0EA", night: 0 },
   { c1: "#E5D4FF", c2: "#FFC8DD", c3: "#D4F5E9", night: 0.08 },
+  { c1: "#FFE7D1", c2: "#FFC9DA", c3: "#F3E2FF", night: 0.12 },
+  { c1: "#DCC9F5", c2: "#AFA0DE", c3: "#6C5F9E", night: 0.42 },
+  { c1: "#C9A6D8", c2: "#D9A6C6", c3: "#B08FD0", night: 0.55 },
   { c1: "#8E6AAE", c2: "#C98BC0", c3: "#FFB3D1", night: 0.72 },
+  { c1: "#8C689F", c2: "#B67FA8", c3: "#5E4A86", night: 0.78 },
+  { c1: "#9C7FB4", c2: "#C79BB6", c3: "#E3C7E6", night: 0.6 },
   { c1: "#FF9EBB", c2: "#B79CFF", c3: "#3B2A6B", night: 1 },
 ];
 

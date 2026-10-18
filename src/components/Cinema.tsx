@@ -7,6 +7,8 @@ import { onFrame, prefersReducedMotion } from "../lib/loop";
 import { isLite } from "../lib/perf";
 import { mergeCuesForDisplay, parseSRT, type Cue } from "../lib/srt";
 import { clamp, easeOutCubic } from "../lib/utils";
+import Orb, { type OrbApi } from "./cinema/Orb";
+import { burst } from "../lib/fx";
 
 type Props = { onClose: () => void };
 type Phase = "rotate" | "gate" | "play";
@@ -573,6 +575,9 @@ export default function Cinema({ onClose }: Props) {
   const [current, setCurrent] = useState<{ cue: Cue; index: number } | null>(null);
   const [prev, setPrev] = useState<{ cue: Cue; variant: number; index: number } | null>(null);
   const [heartVisible, setHeartVisible] = useState(false);
+  const [finalePhase, setFinalePhase] = useState(false);
+  const orbRef = useRef<OrbApi>(null);
+  const orbHitRef = useRef(false);
   const [closing, setClosing] = useState(false);
   const [opening, setOpening] = useState(false);
   const [gateHint, setGateHint] = useState("Chạm vào tinh cầu");
@@ -726,8 +731,17 @@ export default function Cinema({ onClose }: Props) {
           cueIndexRef.current = nextIndex;
           if (previous >= 0) {
             setPrev({ cue: cues[previous], variant: previous % EXIT_VARIANTS.length, index: previous });
+            if (previous % 2 === 1) orbRef.current?.absorbText();
             window.clearTimeout(prevTimer.current);
             prevTimer.current = window.setTimeout(() => setPrev(null), 300);
+          }
+          if (nextIndex >= 0) {
+            orbRef.current?.onCue(nextIndex);
+            if (nextIndex % 2 === 0) {
+              orbRef.current?.emitText();
+              const rect = stageRef.current?.getBoundingClientRect();
+              if (rect) burst(rect.left + rect.width / 2, rect.top + rect.height / 2, { count: 10, shapes: ["spark", "heart"], speedMax: 160, gravity: 20, sizeScale: 0.7 });
+            }
           }
           setCurrent(nextIndex >= 0 ? { cue: cues[nextIndex], index: nextIndex } : null);
         }
@@ -741,9 +755,18 @@ export default function Cinema({ onClose }: Props) {
       if (progressRef.current) {
         progressRef.current.style.transform = "scaleX(" + clamp(t / total).toFixed(4) + ")";
       }
+      const isFinale = t >= total - 2;
+      if (isFinale !== finalePhase) {
+        setFinalePhase(isFinale);
+        orbRef.current?.setPhase(isFinale ? "finale" : "lyric");
+      }
     });
     return stop;
-  }, [cues, finish, heartVisible, lyricEnd, phase, total]);
+  }, [cues, finalePhase, finish, heartVisible, lyricEnd, phase, total]);
+
+  useEffect(() => {
+    orbRef.current?.setPhase(!heartVisible ? "lyric" : finalePhase ? "finale" : "heart");
+  }, [finalePhase, heartVisible]);
 
   // Camera: kéo để xoay, tự trả về khi lyric; tim xoay tự do/chậm dần.
   useEffect(() => {
@@ -792,6 +815,13 @@ export default function Cinema({ onClose }: Props) {
       return;
     }
     tapStart.current = { x: event.clientX, y: event.clientY, at: performance.now(), moved: 0 };
+    const rect = stageRef.current?.getBoundingClientRect();
+    const orbHit = rect ? Math.hypot(event.clientX - (rect.left + rect.width / 2), event.clientY - (rect.top + rect.height / 2)) < Math.min(rect.height * 0.24, 150) : false;
+    orbHitRef.current = orbHit;
+    if (orbHit) {
+      orbRef.current?.pointer(event.clientX, event.clientY, "hold");
+      audio.sfx("pop");
+    }
     view.dragging = true;
     view.lx = event.clientX;
     view.ly = event.clientY;
@@ -827,6 +857,11 @@ export default function Cinema({ onClose }: Props) {
     const limitX = heartVisible ? 180 : 35;
     view.ry = clamp(view.ry + dx * 0.25, -limitX, limitX);
     view.rx = clamp(view.rx - dy * 0.18, -limitY, limitY);
+    const stageRect = stageRef.current?.getBoundingClientRect();
+    if (stageRect) {
+      const orbDist = Math.hypot(event.clientX - (stageRect.left + stageRect.width / 2), event.clientY - (stageRect.top + stageRect.height / 2));
+      if (orbDist < Math.min(stageRect.height * 0.42, 260)) orbRef.current?.pointer(event.clientX, event.clientY, "move");
+    }
     if (interactRef.current.attract) {
       interactRef.current.ax = event.clientX;
       interactRef.current.ay = event.clientY;
@@ -850,7 +885,15 @@ export default function Cinema({ onClose }: Props) {
     tapStart.current.moved += Math.abs(event.clientX - tapStart.current.x) > 6 ? 1 : 0;
     if (pointers.current.size < 2) view.pinch = false;
     view.dragging = pointers.current.size > 0;
-    const isTap = performance.now() - tapStart.current.at < 340 && tapStart.current.moved < 8;
+    const pressLength = performance.now() - tapStart.current.at;
+    if (orbHitRef.current && pressLength >= 330) {
+      orbRef.current?.pointer(event.clientX, event.clientY, "release");
+      audio.sfx("sparkle");
+      burst(event.clientX, event.clientY, { count: 28, shapes: ["heart", "petal", "spark"], speedMax: 300, gravity: 90, sizeScale: 0.9 });
+      vibrate([14, 30, 18]);
+      orbHitRef.current = false;
+    }
+    const isTap = pressLength < 340 && tapStart.current.moved < 8;
     if (isTap && phase === "play") {
       const x = event.clientX;
       const y = event.clientY;
@@ -858,6 +901,18 @@ export default function Cinema({ onClose }: Props) {
       interactRef.current.taps.push({ x, y, at: performance.now() });
       audio.sfx("pop");
       vibrate(12);
+      if (orbHitRef.current) {
+        orbRef.current?.pointer(x, y, "tap");
+        audio.sfx("boing");
+        burst(x, y, {
+          count: 12,
+          shapes: ["heart", "spark", "petal"],
+          speedMax: 180,
+          gravity: 60,
+          sizeScale: 0.8,
+        });
+      }
+      orbHitRef.current = false;
       if (heartVisible) {
         const rect = stageRef.current?.getBoundingClientRect();
         if (rect) {
@@ -1054,13 +1109,7 @@ export default function Cinema({ onClose }: Props) {
             </div>
           )}
 
-          {phase === "play" && (
-            <div className="cinema-anchor" aria-hidden="true">
-              <span className="cinema-anchor__glow" />
-              <span className="cinema-anchor__pearl" />
-              <span className="cinema-anchor__ring" />
-            </div>
-          )}
+          {phase === "play" && <Orb ref={orbRef} active={!closing && !finishedRef.current} phase={heartVisible ? (finalePhase ? "finale" : "heart") : "lyric"} />}
 
           {phase === "play" && !heartVisible && current && (
             <span className="cinema-cue-sweep" aria-hidden="true" key={"sweep-" + current.index} />
@@ -1074,12 +1123,12 @@ export default function Cinema({ onClose }: Props) {
                 </span>
               )}
               {prev && (
-                <div className={"cinema-cue is-exiting cue-exit--" + EXIT_VARIANTS[prev.variant % EXIT_VARIANTS.length]} key={"prev-" + prev.index}>
+                <div className={"cinema-cue is-exiting cue-exit--" + (prev.index % 2 === 1 ? "to-orb" : EXIT_VARIANTS[prev.variant % EXIT_VARIANTS.length])} key={"prev-" + prev.index}>
                   <CueContent text={prev.cue.text} variant={prev.variant} cueIndex={prev.index} exiting />
                 </div>
               )}
               {current && (
-                <div className={"cinema-cue cue-enter--" + ENTER_VARIANTS[variantIndex]} key={"cue-" + current.index}>
+                <div className={"cinema-cue cue-enter--" + (current.index % 2 === 0 ? "orb-out" : ENTER_VARIANTS[variantIndex])} key={"cue-" + current.index}>
                   <CueContent text={current.cue.text} variant={variantIndex} cueIndex={current.index} />
                 </div>
               )}
@@ -1110,7 +1159,7 @@ export default function Cinema({ onClose }: Props) {
             </>
           )}
 
-          {phase === "play" && heartVisible && <p className="cinema-touch-hint">Chạm vào tinh cầu ♡</p>}
+          {phase === "play" && heartVisible && <p className="cinema-touch-hint">Chạm vào quả cầu ♡</p>}
           {phase === "play" && <div className="cinema-letterbox" aria-hidden="true" />}
 
           {phase === "rotate" && (

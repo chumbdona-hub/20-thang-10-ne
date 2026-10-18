@@ -7,6 +7,7 @@ import { burst } from "../lib/fx";
 import { givenName } from "../lib/nameUtils";
 import { clamp } from "../lib/utils";
 import NameWish from "./NameWish";
+import { usePhoto } from "../hooks/usePhoto";
 
 const STARS = CONFIG.girls.map((name, index) => {
   const t = (index / CONFIG.girls.length) * Math.PI * 2;
@@ -20,6 +21,16 @@ const STARS = CONFIG.girls.map((name, index) => {
     twinkle: (index % 7) * 0.4,
   };
 });
+
+function StarPhoto({ name }: { name: string }) {
+  const { ok, photo } = usePhoto(name, "thumb");
+  if (!ok || !photo?.url) return <span className="constellation-star__core" aria-hidden="true" />;
+  return (
+    <span className="constellation-star__photo" aria-hidden="true">
+      <img src={photo.url} alt="" loading="lazy" decoding="async" draggable={false} />
+    </span>
+  );
+}
 
 export default function ConstellationSection({ onOverlayChange }: { onOverlayChange?: (open: boolean) => void }) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -156,7 +167,7 @@ export default function ConstellationSection({ onOverlayChange }: { onOverlayCha
                 onClick={(event) => open(star.name, event)}
                 aria-label={`Mở lời chúc dành cho ${star.name}`}
               >
-                <span className="constellation-star__core" aria-hidden="true" />
+                <StarPhoto name={star.name} />
                 <span className="constellation-star__halo" aria-hidden="true" />
                 <span className="constellation-star__name">
                   {givenName(star.name)}

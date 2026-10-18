@@ -5,6 +5,7 @@ import { audio } from "../lib/audio";
 import { burst, petalRain } from "../lib/fx";
 import { onFrame, prefersReducedMotion } from "../lib/loop";
 import { Rose, Teddy } from "./art/FlowerArt";
+import MovieButton from "./MovieButton";
 
 const STARS = Array.from({ length: 64 }, (_, i) => ({
   left: `${(i * 47 + 13) % 98}%`,
@@ -161,6 +162,7 @@ export default function FinaleSection() {
               <span aria-hidden="true">💐</span>
               {bouquets ? "Gửi tặng thêm một bó hoa" : "Gửi tặng thêm một bó hoa"}
             </button>
+            <MovieButton />
             <span className="finale-bouquet-count" aria-live="polite">
               {bouquets ? `đã gửi ${bouquets} bó hoa rồi đó 💗` : "bấm thử đi, hoa nở liền 🌷"}
             </span>

@@ -1,5 +1,5 @@
 // Màn hình lời chúc: tên viết bằng hạt, tinh cầu + vòng quay, phong thư mở thành thiệp.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { audio } from "../lib/audio";
 import { burst, petalRain } from "../lib/fx";
 import { onFrame, prefersReducedMotion } from "../lib/loop";
@@ -7,6 +7,7 @@ import { isLite } from "../lib/perf";
 import { fitText } from "../lib/text";
 import { type WishTarget } from "../data/wishes";
 import { MiniFlower, Rose } from "./art/FlowerArt";
+import PhotoFrame from "./PhotoFrame";
 
 type Props = { target: WishTarget; onClose: () => void };
 
@@ -321,6 +322,21 @@ export default function NameWish({ target, onClose }: Props) {
           <span className="wish-head__date">20 · 10 · 11B7</span>
         </header>
 
+        <div className={`wish-photo-pearl${isTeacher ? " is-teacher-photo" : ""}`}>
+          <span className="wish-photo-pearl__orbit" aria-hidden="true" />
+          <span className="wish-photo-pearl__orbit wish-photo-pearl__orbit--two" aria-hidden="true" />
+          <span className="wish-photo-pearl__glow" aria-hidden="true" />
+          <PhotoFrame
+            name={target.name}
+            shape="circle"
+            size="full"
+            variant={isTeacher ? "gold" : "rose"}
+            eager={isTeacher}
+            className={isTeacher ? "wish-photo-pearl__frame is-kenburns" : "wish-photo-pearl__frame"}
+          />
+          <span className="wish-photo-pearl__spark" aria-hidden="true">{isTeacher ? "✧" : "♡"}</span>
+        </div>
+
         <div className="wish-name-stage">
           <canvas
             ref={canvasRef}
@@ -390,6 +406,11 @@ export default function NameWish({ target, onClose }: Props) {
           onClick={(event) => event.stopPropagation()}
         >
           <span className="wish-letter-card__heart" aria-hidden="true">♡</span>
+          <div className={`wish-polaroid${isTeacher ? " is-teacher" : ""}`} aria-hidden="true">
+            <span className="wish-polaroid__tape" />
+            <PhotoFrame name={target.name} shape="square" size="full" variant={isTeacher ? "gold" : "rose"} className="wish-polaroid__photo" />
+            <span className="wish-polaroid__caption">{isTeacher ? "Cô giáo của chúng em" : target.name}</span>
+          </div>
           <p className="wish-letter-card__title script">
             {isTeacher ? "Kính chúc cô" : "Chúc mừng 20/10 ♡"}
           </p>
@@ -398,10 +419,10 @@ export default function NameWish({ target, onClose }: Props) {
           </p>
           <div className="wish-letter-card__body" aria-live="polite">
             {typed.split(" ").map((word, wi, all) => (
-              <span className="w" key={`${wi}-${word}`}>
-                {word}
+              <Fragment key={`${wi}-${word}`}>
+                <span className="w">{word}</span>
                 {wi < all.length - 1 ? " " : ""}
-              </span>
+              </Fragment>
             ))}
             {typed.length < wish.length && <span className="wish-caret" aria-hidden="true" />}
           </div>

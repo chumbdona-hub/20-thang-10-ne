@@ -13,6 +13,7 @@ import { audio } from "../lib/audio";
 import { burst } from "../lib/fx";
 import { givenName, initialsFor, titleCaseVi } from "../lib/nameUtils";
 import NameWish from "./NameWish";
+import PhotoFrame from "./PhotoFrame";
 
 const STICKERS = ["🌸", "🌷", "✨", "🦋", "🌼", "💗", "🫧", "🌙", "🍓", "🧁", "🎀", "🪐", "🌻", "☁️", "💌", "⭐"];
 const TONES = ["rose", "butter", "lilac", "mint", "peach", "sky"] as const;
@@ -197,7 +198,7 @@ export default function GirlsSection({ onCountChange }: Props) {
                 <span className="girl-sticker" aria-hidden="true">{STICKERS[index % STICKERS.length]}</span>
                 <span className="girl-avatar">
                   <span className="girl-avatar__halo" aria-hidden="true" />
-                  <span className="girl-avatar__initials">{initialsFor(name)}</span>
+                  <PhotoFrame name={name} shape="arch" size="thumb" variant={TONES[index % TONES.length]} className="girl-avatar__photo" />
                   <span className="girl-avatar__flower" aria-hidden="true">✿</span>
                 </span>
                 <span className="girl-name">

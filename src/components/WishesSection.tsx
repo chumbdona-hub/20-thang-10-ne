@@ -1,5 +1,5 @@
 // Section 4 — Sân khấu "dải ngân hà lời thương": mỗi lúc chỉ MỘT thẻ chữ ở giữa.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { CONFIG } from "../data/config";
 import { audio } from "../lib/audio";
 import { burst } from "../lib/fx";
@@ -297,19 +297,21 @@ export default function WishesSection() {
                 </span>
                 <p className="wish-card__kicker">Một chút thương từ 11B7</p>
                 <p className="wish-card__msg">
-                  {card.text.split(" ").map((word, wi) => (
-                    <span className="wish-word" key={`${card.id}-w-${wi}`}>
-                      {Array.from(word).map((char, ci) => (
-                        <span
-                          className="wish-letter"
-                          key={`${card.id}-c-${wi}-${ci}`}
-                          style={{ ["--ci" as string]: wi * 3 + ci }}
-                        >
-                          {char}
-                        </span>
-                      ))}
-                      {wi < card.text.split(" ").length - 1 ? " " : ""}
-                    </span>
+                  {card.text.split(" ").map((word, wi, allWords) => (
+                    <Fragment key={`${card.id}-w-${wi}`}>
+                      <span className="wish-word">
+                        {Array.from(word).map((char, ci) => (
+                          <span
+                            className="wish-letter"
+                            key={`${card.id}-c-${wi}-${ci}`}
+                            style={{ ["--ci" as string]: wi * 3 + ci }}
+                          >
+                            {char}
+                          </span>
+                        ))}
+                      </span>
+                      {wi < allWords.length - 1 ? " " : ""}
+                    </Fragment>
                   ))}
                   <span className="wish-card__sheen" aria-hidden="true" />
                 </p>

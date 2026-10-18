@@ -1,9 +1,8 @@
 // Section 1 — intro 20/10 với hoa 3D SVG, gấu nhỏ, bướm và thiệp mời xem "cảnh phim".
 import { useCallback, useRef, useState } from "react";
-import { CONFIG } from "../data/config";
 import { audio } from "../lib/audio";
 import { burst } from "../lib/fx";
-import { clamp, initialsOf } from "../lib/utils";
+import { clamp } from "../lib/utils";
 import { Balloon, Butterfly, MiniFlower, Rose, Teddy } from "./art/FlowerArt";
 
 type Props = { onOpenCinema: () => void };
@@ -95,20 +94,6 @@ export default function Hero({ onOpenCinema }: Props) {
           </h1>
           <p className="hero-sub hero-in hero-in--4">
             Gửi các cô gái xinh đẹp của lớp <em>11B7</em> 💐
-          </p>
-          <div className="hero-meta hero-in hero-in--5">
-            <div className="hero-avatars">
-              {CONFIG.girls.slice(0, 6).map((name) => (
-                <span className="hero-avatar" key={name} title={name}>
-                  {initialsOf(name)}
-                </span>
-              ))}
-              <span className="hero-avatar">＋</span>
-            </div>
-            <span className="hero-meta__text">Gửi các cô gái 11B7</span>
-          </div>
-          <p className="hero-sticker hero-in hero-in--6">
-            <span aria-hidden="true">✿</span> Hôm nay, các cậu là nhân vật chính
           </p>
           <a className="hero-scroll" href="#letter" aria-label="Cuộn xuống phần lá thư">
             <span>Cuộn xuống nhé</span>

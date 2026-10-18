@@ -205,7 +205,6 @@ export default function GirlsSection({ onCountChange }: Props) {
                   <span className="girl-name__rest">{name.slice(0, Math.max(0, name.lastIndexOf(" ")))} </span>
                   <strong>{givenName(name)}</strong>
                 </span>
-                <span className="girl-tag">cô gái {String(index + 1).padStart(2, "0")}</span>
                 <span className="girl-charm" aria-hidden="true"><i /><b>✿</b><i /></span>
                 <span className="girl-open">mở lời chúc <span aria-hidden="true">→</span></span>
               </button>

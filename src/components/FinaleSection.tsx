@@ -183,7 +183,7 @@ export default function FinaleSection() {
               </span>
               <div>
                 <p className="finale-letter__kicker">Lá thư cuối · gửi các cậu</p>
-                <p className="finale-letter__to script">Gửi 16 cô gái của 11B7,</p>
+                <p className="finale-letter__to script">Gửi các cô gái của 11B7,</p>
               </div>
             </div>
             <div className="finale-letter__body" aria-label={FULL_LETTER}>

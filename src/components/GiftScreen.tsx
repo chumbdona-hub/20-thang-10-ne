@@ -34,6 +34,8 @@ export default function GiftScreen({ onReveal, onDone }: Props) {
     if (opening) return;
     setOpening(true);
     audio.init();
+    // iOS: mở khoá phần tử audio của bài hát ngay trong cử chỉ chạm này.
+    audio.unlockSong();
     audio.setMood("hero");
     window.setTimeout(() => audio.sfx("sparkle"), 120);
     audio.sfx("chime");
@@ -99,7 +101,7 @@ export default function GiftScreen({ onReveal, onDone }: Props) {
           <p className="gift-eyebrow">
             <span aria-hidden="true">✦</span> Một món quà nhỏ xinh <span aria-hidden="true">✦</span>
           </p>
-          <p className="gift-script script">Gửi 16 cô gái của</p>
+          <p className="gift-script script">Gửi các cô gái của</p>
           <h1 className="gift-title">
             11<span>B7</span>
           </h1>
@@ -116,6 +118,7 @@ export default function GiftScreen({ onReveal, onDone }: Props) {
             <span className="gift-halo__dots" />
           </div>
           <div className="gift-teddy" aria-hidden="true">
+            <span className="gift-teddy__bubble script">mở quà nha!</span>
             <Teddy />
           </div>
           <button

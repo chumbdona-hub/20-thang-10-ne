@@ -233,15 +233,17 @@
 
 .finale-teddy {
   position: relative;
-  width: clamp(68px, 10vw, 100px);
-  margin-bottom: 0.4rem;
-  filter: drop-shadow(0 14px 18px rgba(15, 5, 30, 0.45));
+  width: clamp(80px, 11vw, 112px);
+  margin-bottom: 0.3rem;
   animation: softFloat 5s ease-in-out infinite;
 }
 
-.finale-teddy .teddy-arm {
-  transform-origin: 40px 150px;
-  animation: teddyWave 2.7s ease-in-out infinite;
+.finale-teddy .teddy {
+  filter: drop-shadow(0 14px 20px rgba(15, 5, 30, 0.45));
+}
+
+.finale-teddy .teddy-arm--wave {
+  animation-duration: 2.7s;
 }
 
 .finale-teddy__bubble {
@@ -534,4 +536,15 @@
   width: min(14vw, 90px);
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+
+.finale-letter__body p,
+.finale-letter__to,
+.finale-title,
+.finale-line,
+.finale-ps {
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: manual;
 }

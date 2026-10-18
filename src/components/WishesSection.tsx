@@ -246,8 +246,8 @@ export default function WishesSection() {
           </div>
           <div className="wish-marquee wish-marquee--bottom" aria-hidden="true">
             <span>
-              16 cô gái · một thanh xuân · chúc cậu luôn vui · 16 cô gái · một thanh xuân · chúc cậu
-              luôn vui ·
+              Gửi các cô gái 11B7 · một thanh xuân · chúc cậu luôn vui · Gửi các cô gái 11B7 ·
+              một thanh xuân ·
             </span>
           </div>
           <div className="wish-petals" aria-hidden="true">
@@ -334,7 +334,7 @@ export default function WishesSection() {
 
           <div className="wish-stage__footer" aria-hidden="true">
             <span className="wish-stage__live">
-              <span className="wish-stage__live-dot" /> 16 lời thương đang chờ bay tới
+              <span className="wish-stage__live-dot" /> Gửi các cô gái 11B7 · những lời thương đang bay
             </span>
           </div>
         </div>

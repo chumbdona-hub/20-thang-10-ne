@@ -105,9 +105,7 @@ export default function Hero({ onOpenCinema }: Props) {
               ))}
               <span className="hero-avatar">＋</span>
             </div>
-            <span className="hero-meta__text">16 cô gái</span>
-            <span className="hero-meta__divider" aria-hidden="true" />
-            <span className="hero-meta__text">một thanh xuân</span>
+            <span className="hero-meta__text">Gửi các cô gái 11B7</span>
           </div>
           <p className="hero-sticker hero-in hero-in--6">
             <span aria-hidden="true">✿</span> Hôm nay, các cậu là nhân vật chính

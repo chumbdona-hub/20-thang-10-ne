@@ -1,6 +1,6 @@
 # 20/10 – Một món quà của 11B7 🌸
 
-Một website cuộn kể chuyện (scroll-story) dành tặng **16 cô gái lớp 11B7** nhân ngày Phụ nữ Việt Nam 20/10. Trang có hộp quà mở màn, hoa 3D nhiều lớp cánh, thư giấy, thẻ lật 3D cho từng bạn, dải ngân hà lời chúc, một "cảnh phim" lyric toàn màn hình với trái tim hạt 3D, và phần kết dưới trời sao.
+Một website cuộn kể chuyện (scroll-story) dành tặng **các cô gái lớp 11B7** nhân ngày Phụ nữ Việt Nam 20/10. Trang có hộp quà mở màn, hoa 3D nhiều lớp cánh, thư giấy, ô nhập tên để nhận lời chúc riêng, chòm sao 16 bạn, dải ngân hà lời chúc, một "cảnh phim" vũ trụ với tinh cầu ngọc trai và trái tim hạt 3D, vườn hoa lời chúc và phần kết dưới trời sao.
 
 Dự án chạy bằng **React + Vite + CSS thuần**, được chia nhiều file, không dùng `localStorage`, và sẵn sàng đưa lên GitHub Pages.
 
@@ -24,7 +24,10 @@ Dự án chạy bằng **React + Vite + CSS thuần**, được chia nhiều fil
     ├── main.tsx                Điểm khởi động React
     ├── App.tsx                 Lắp ráp nền, màn hình quà, các section, cảnh phim
     ├── data/config.ts          Tên lớp, danh sách bạn, lời chúc, thư kết, bpm…
+    ├── data/wishes.ts          Lời chúc riêng 16 bạn, fallback, bất ngờ cô giáo
     ├── data/lyrics.ts          Nguyên văn phụ đề SRT
+    ├── lib/text.ts             Bỏ dấu tiếng Việt, khớp tên, wrapByWords, auto-fit
+    ├── lib/nameUtils.ts        Tên gọi, chữ cái avatar, viết hoa tên
     ├── lib/
     │   ├── srt.ts              parseSRT (BOM, CRLF, mốc thời gian)
     │   ├── audio.ts            Web Audio: nhạc hộp nhạc, hiệu ứng, song.mp3
@@ -34,6 +37,10 @@ Dự án chạy bằng **React + Vite + CSS thuần**, được chia nhiều fil
     ├── hooks/useReveal.ts      IntersectionObserver cho hiệu ứng hiện dần
     ├── components/
     │   ├── Background.tsx      Gradient đổi màu liên tục theo vị trí cuộn
+    │   ├── SectionBoundary.tsx Lỗi một section không làm sập cả trang
+    │   ├── NameWish.tsx        Overlay lời chúc + tên bằng hạt + thiệp thư
+    │   ├── ConstellationSection.tsx  Section 3.5 – chòm sao 11B7
+    │   ├── GardenSection.tsx   Section 4.5 – vườn hoa lời chúc
     │   ├── ProgressBar.tsx     Thanh tiến độ cuộn
     │   ├── GiftScreen.tsx      Section 0 – hộp quà
     │   ├── Hero.tsx            Section 1 – intro hoa 3D
@@ -54,6 +61,15 @@ Dự án chạy bằng **React + Vite + CSS thuần**, được chia nhiều fil
         ├── finale.css          Đoạn kết
         └── responsive.css      Media query + giảm chuyển động
 ```
+
+### Cách dùng các phần mới
+
+- **Lời chúc riêng:** vào mục 02, gõ tên (có dấu/không dấu đều được) rồi chọn gợi ý hoặc bấm “Gửi lời chúc”. Bấm trực tiếp một thẻ tên cũng mở cùng một màn hình lời chúc.
+- **Tên lạ:** vẫn nhận được lời chúc chung, điền đúng tên bạn đã gõ.
+- **Bất ngờ cô giáo:** gõ đúng họ tên cô (kèm “cô” hoặc “cô giáo” đều được) — mục `TEACHER` trong `src/data/wishes.ts`. Tên cô không xuất hiện trong gợi ý hay bất kỳ chỗ nào trên trang.
+- **Chòm sao 11B7:** chạm một ngôi sao để mở lời chúc; kéo nhẹ để xoay bầu trời.
+- **Vườn hoa:** chạm vào mặt đất để gieo hoa kèm một lời chúc (tối đa 40 bông, máy yếu 20 bông).
+- **Cảnh phim:** ở cổng vào, chạm tinh cầu để bắt đầu và mở khoá âm thanh; không chạm thì sau 10 giây cảnh vẫn tự chạy nhưng iOS có thể không phát nhạc. Kéo để xoay camera, pinch để zoom, giữ 350ms để hút hạt, chạm để thả tim.
 
 > Ghi chú: bản dựng dùng Vite để đóng gói các module JS/CSS rời thành `dist/index.html` (tiện cho GitHub Pages). Mọi nội dung, bố cục và hiệu ứng vẫn được tách thành nhiều file như trên.
 
@@ -101,16 +117,16 @@ Mở `src/data/config.ts`:
 ```ts
 song: {
   url: "assets/audio/song.mp3",
-  bpm: 100,          // nhịp mỗi phút, dùng cho hiệu ứng nhấp nháy và trái tim đập
-  beatOffset: 0,     // lệch phách đầu (giây), tăng/giảm để khớp bản nhạc
-  duration: 59,      // tổng độ dài "cảnh phim" (giây)
-  heartDuration: 5.133, // 5.13s cuối: trái tim hạt xuất hiện & đập theo nhịp
+  bpm: 100,              // nhịp trái tim đập / hiệu ứng nhấp nháy
+  beatOffset: 0,         // lệch phách đầu (giây)
+  duration: 59,          // tổng độ dài cảnh phim
+  heartDuration: 12.967, // 12.97s cuối: trái tim hạt & vòng chữ
 }
 ```
 
 Mốc thời gian lyric được tính tự động từ dữ liệu SRT trong `src/data/lyrics.ts`; không cần sửa tay. Khi thay file SRT, chỉ cần giữ nguyên định dạng `HH:MM:SS,mmm --> HH:MM:SS,mmm`.
 
-Bản SRT hiện tại có phụ đề từ **8,633s** đến **53,867s**. Vì vậy cảnh phim bắt đầu bằng **8,6 giây mở màn không chữ, chỉ có nhạc và hiệu ứng nền**, rồi lyric mới xuất hiện. Khi lyric kết thúc, trái tim hạt 3D hiện ra, đập theo nhịp và biến mất ở giây thứ **59**. Nếu thay SRT dài/ngắn hơn, hãy đặt `duration` lớn hơn mốc cuối một chút (ví dụ 59) và chỉnh `heartDuration` tương ứng.
+Bản SRT hiện tại (14 mốc, tiếng Việt) có phụ đề từ **2,533s** đến **46,033s**. Cảnh phim bắt đầu bằng **2,5 giây mở màn không chữ, chỉ có nhạc và hiệu ứng nền**, rồi lyric mới xuất hiện. Khi lyric kết thúc, trái tim hạt 3D hiện ra, đập theo nhịp cùng chữ nền và biến mất ở giây thứ **59** (trái tim kéo dài 12,967 giây). Nếu thay SRT dài/ngắn hơn, hãy đặt `duration` bằng mốc cuối + thời gian muốn giữ trái tim, và chỉnh `heartDuration` tương ứng.
 
 ---
 
@@ -159,8 +175,12 @@ Sau khi sửa, chạy lại `npm run dev` (hoặc `npm run build`).
 - Tôn trọng `prefers-reduced-motion`; thiếu API (Fullscreen, Orientation lock, vibrate…) thì bỏ qua êm.
 - Ảnh hoa 3D nhiều lớp cánh xếp xoắn ốc, có hiệu ứng nở, nghiêng theo con trỏ, kéo để xoay và chạm để hoa rung.
 - Lời chúc luôn hiển thị **một thẻ tại một thời điểm** trong sân khấu riêng, không thể chồng chữ lên nhau hay tràn lên tiêu đề.
-- Thẻ của các bạn nữ **giữ nguyên lời nhắn** sau khi mở, chỉ gấp lại khi người xem bấm nút “Đọc xong rồi, gấp lại”. Mỗi lúc chỉ render một mặt thẻ (không dùng `backface-visibility` hay hai mặt chồng lên nhau), nên lời nhắn luôn hiển thị trên Safari/iOS và mọi trình duyệt di động.
-- Chế độ **lite** tự bật khi máy yếu (RAM/CPU thấp) hoặc khi FPS tụt dưới ~44: giảm số hạt, hạ DPR canvas, vẽ 30fps, tắt các animation trang trí và `backdrop-filter`. Nội dung và hiệu ứng chính vẫn giữ nguyên.
+- Thẻ tên không còn lật hai mặt. Mỗi thẻ chỉ có một mặt; chạm vào sẽ mở overlay lời chúc, nên không thể xảy ra lỗi “lật rồi biến mất”.
+- Chế độ **lite** tự bật khi máy yếu (RAM/CPU thấp) hoặc khi FPS tụt dưới ~42: giảm số hạt (trái tim còn ~1100 hạt), hạ DPR canvas, vẽ 24–28fps, tắt bớt animation trang trí, blur và `backdrop-filter`. Nội dung, lyric và nhịp trái tim vẫn giữ nguyên.
+- **Chống ngắt giữa từ:** mọi khối chữ đặt `word-break: normal; overflow-wrap: normal; hyphens: manual`. Các hiệu ứng tách chữ bọc từng TỪ trong span `nowrap`; chữ trong tên/lyric/thiệp chỉ xuống dòng ở dấu cách. Tên dài trên thẻ đã được kiểm tra ở 320/360/390/414px.
+- **Âm thanh iOS:** lần chạm “Chạm để mở quà” gọi `unlockSong()` (play rồi pause phần tử audio) và khởi tạo AudioContext; lần chạm tinh cầu gọi `resume()` + `startSong()`. Nếu tải nhạc lỗi, cảnh phim chạy bằng đồng hồ thời gian thực và nhịp tự tạo từ `bpm`.
+- **Hiệu ứng âm thanh mới:** `type`, `found`, `envelope`, `letter-tick`, `star`, `plant`, `teacher` — tất cả tổng hợp bằng Web Audio, không có file rời.
+- Chú gấu chibi được vẽ mới hoàn toàn bằng SVG: mắt biết chớp, tay vẫy, nơ cổ và cành tulip khẽ đung đưa — nhẹ hơn ảnh raster và sắc nét trên mọi màn hình.
 - Không sử dụng `localStorage`/`sessionStorage`.
 
 Chúc các bạn gái 11B7 một ngày 20/10 thật rạng rỡ. 💐

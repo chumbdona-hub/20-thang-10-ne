@@ -1,0 +1,295 @@
+/* constellation.css — Section 3.5: bầu trời 3D 16 ngôi sao nối thành trái tim. */
+.constellation {
+  position: relative;
+  overflow: hidden;
+  padding-block: clamp(4rem, 9vh, 7rem);
+}
+
+.constellation-head {
+  max-width: 44rem;
+  margin: 0 auto clamp(1.4rem, 3vw, 2rem);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.constellation-pill {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffeaf5;
+}
+
+.constellation-script {
+  color: #ffd6e6;
+  font-size: 1.15em;
+  display: inline-block;
+  transform: rotate(-2deg);
+}
+
+.constellation-stage {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: min(72vh, 560px);
+  min-height: 380px;
+  border-radius: 30px;
+  overflow: hidden;
+  touch-action: pan-y;
+  background:
+    radial-gradient(90% 70% at 50% 20%, rgba(118, 82, 180, 0.3), transparent 66%),
+    radial-gradient(80% 70% at 16% 84%, rgba(205, 96, 150, 0.24), transparent 66%),
+    linear-gradient(160deg, #150c2a 0%, #241238 52%, #3a1940 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 40px 90px -50px rgba(30, 8, 44, 0.8), 0 1px 0 rgba(255, 255, 255, 0.22) inset;
+}
+
+.constellation-sky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.constellation-sky > span:not(.constellation-shooting) {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff8fd;
+  box-shadow: 0 0 6px 1px rgba(255, 224, 242, 0.5);
+  animation: twinkle 4.6s ease-in-out infinite;
+}
+
+.constellation-shooting {
+  position: absolute;
+  top: 16%;
+  left: 8%;
+  width: 110px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), transparent);
+  transform: rotate(24deg);
+  opacity: 0;
+  animation: constellationShoot 9s ease-in infinite;
+}
+
+.constellation-shooting--two {
+  top: 34%;
+  left: 58%;
+  animation-delay: 4.5s;
+  animation-duration: 13s;
+}
+
+@keyframes constellationShoot {
+  0%, 84% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(24deg) scaleX(0.3);
+  }
+  88% {
+    opacity: 1;
+    transform: translate3d(30px, 14px, 0) rotate(24deg) scaleX(1);
+  }
+  96%, 100% {
+    opacity: 0;
+    transform: translate3d(240px, 112px, 0) rotate(24deg) scaleX(0.6);
+  }
+}
+
+.constellation-rotor {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  will-change: transform;
+}
+
+.constellation-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.constellation-star {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  z-index: 3;
+}
+
+.constellation-star__core {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff7fb;
+  box-shadow: 0 0 10px 3px rgba(255, 216, 238, 0.75), 0 0 22px 8px rgba(255, 160, 208, 0.28);
+  animation: starPulseCore 4.2s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+.constellation-star:nth-child(3n) .constellation-star__core {
+  background: #fff0c9;
+  box-shadow: 0 0 10px 3px rgba(255, 236, 188, 0.8), 0 0 22px 8px rgba(255, 200, 150, 0.24);
+}
+
+.constellation-star__halo {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 220, 240, 0.28);
+  opacity: 0;
+  animation: starHalo 5s ease-out infinite;
+  animation-delay: var(--delay);
+}
+
+.constellation-star__name {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  translate: -50% 0;
+  padding: 0.16rem 0.48rem;
+  border-radius: 999px;
+  background: rgba(22, 10, 32, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(255, 240, 248, 0.85);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.constellation-star:hover .constellation-star__name,
+.constellation-star:focus-visible .constellation-star__name,
+.constellation-star.is-active .constellation-star__name {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.constellation-star:hover .constellation-star__core,
+.constellation-star:focus-visible .constellation-star__core {
+  background: #fff;
+  box-shadow: 0 0 16px 5px rgba(255, 226, 244, 0.95), 0 0 34px 12px rgba(255, 160, 210, 0.5);
+}
+
+.constellation-star.is-active .constellation-star__core {
+  animation: starBurst 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes starPulseCore {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes starHalo {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  22% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+@keyframes starBurst {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(2.4);
+    box-shadow: 0 0 24px 10px rgba(255, 230, 245, 0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.constellation-heart {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  font-size: clamp(2.4rem, 8vw, 4.4rem);
+  color: rgba(255, 196, 226, 0.16);
+  text-shadow: 0 0 40px rgba(255, 150, 205, 0.3);
+  animation: heartbeat 4.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.constellation-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  translate: -50% 0;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(20, 9, 30, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: rgba(255, 238, 248, 0.72);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .constellation-stage {
+    height: min(66vh, 460px);
+    min-height: 340px;
+    border-radius: 24px;
+  }
+
+  .constellation-star__name {
+    font-size: 0.52rem;
+    opacity: 0.75;
+  }
+
+  .constellation-hint {
+    font-size: 0.56rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .constellation-star:nth-child(even) .constellation-star__name {
+    top: auto;
+    bottom: 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .constellation-shooting,
+  .constellation-heart,
+  .constellation-star__core,
+  .constellation-star__halo,
+  .constellation-sky > span {
+    animation: none !important;
+  }
+}
+
+html[data-lite="true"] .constellation-shooting,
+html[data-lite="true"] .constellation-star__halo,
+html[data-lite="true"] .constellation-heart {
+  display: none;
+}

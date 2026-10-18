@@ -180,37 +180,116 @@ export function MiniFlower({
 }
 
 export function Teddy({ className = "" }: { className?: string }) {
+  // Gấu chibi: đầu to, tai tròn, má hồng, mắt long lanh biết chớp, nơ cổ và cành tulip trên tay.
+  const uid = useId().replace(/[:]/g, "");
   return (
-    <svg className={`teddy ${className}`} viewBox="0 0 180 210" aria-hidden="true">
-      <ellipse cx="92" cy="198" rx="52" ry="9" fill="#8F4A63" opacity="0.16" />
+    <svg className={`teddy ${className}`} viewBox="0 0 200 220" aria-hidden="true">
+      <defs>
+        <linearGradient id={`${uid}-fur`} x1="0" y1="0" x2="0.8" y2="1">
+          <stop offset="0%" stopColor="#F3D2AE" />
+          <stop offset="45%" stopColor="#E2B489" />
+          <stop offset="100%" stopColor="#C08C63" />
+        </linearGradient>
+        <radialGradient id={`${uid}-head`} cx="36%" cy="28%" r="78%">
+          <stop offset="0%" stopColor="#F8DFC0" />
+          <stop offset="58%" stopColor="#E8BE94" />
+          <stop offset="100%" stopColor="#CE9A6E" />
+        </radialGradient>
+        <linearGradient id={`${uid}-body`} x1="0" y1="0" x2="0.8" y2="1">
+          <stop offset="0%" stopColor="#EBC49B" />
+          <stop offset="100%" stopColor="#C58F66" />
+        </linearGradient>
+        <radialGradient id={`${uid}-muzzle`}>
+          <stop offset="0%" stopColor="#FFF8EC" />
+          <stop offset="100%" stopColor="#F3DDC0" />
+        </radialGradient>
+        <linearGradient id={`${uid}-bow`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FFAEC8" />
+          <stop offset="55%" stopColor="#F07AA1" />
+          <stop offset="100%" stopColor="#D9557F" />
+        </linearGradient>
+        <linearGradient id={`${uid}-petal`} x1="0" y1="0" x2="0.7" y2="1">
+          <stop offset="0%" stopColor="#FFE0EA" />
+          <stop offset="55%" stopColor="#FF9FBC" />
+          <stop offset="100%" stopColor="#EE6E97" />
+        </linearGradient>
+      </defs>
+
+      <ellipse cx="101" cy="212" rx="56" ry="8" fill="#7E3B54" opacity="0.18" />
+
       <g className="teddy-body">
-        <ellipse cx="90" cy="156" rx="45" ry="44" fill="#D9A97E" />
-        <ellipse cx="90" cy="160" rx="30" ry="32" fill="#F5DFC4" />
-        <ellipse cx="55" cy="176" rx="16" ry="12" fill="#C99468" transform="rotate(-20 55 176)" />
-        <ellipse cx="125" cy="176" rx="16" ry="12" fill="#C99468" transform="rotate(20 125 176)" />
-        <g className="teddy-arm">
-          <ellipse cx="37" cy="128" rx="14" ry="27" fill="#D9A97E" transform="rotate(28 37 128)" />
-          <ellipse cx="28" cy="109" rx="10" ry="9" fill="#E4B98F" />
+        {/* chân */}
+        <ellipse cx="70" cy="190" rx="20" ry="14" fill={`url(#${uid}-body)`} />
+        <ellipse cx="132" cy="190" rx="20" ry="14" fill={`url(#${uid}-body)`} />
+        <ellipse cx="68" cy="193" rx="10" ry="7" fill="#F6DFC2" opacity="0.9" />
+        <ellipse cx="134" cy="193" rx="10" ry="7" fill="#F6DFC2" opacity="0.9" />
+
+        {/* thân */}
+        <ellipse cx="101" cy="158" rx="45" ry="43" fill={`url(#${uid}-body)`} />
+        <ellipse cx="101" cy="164" rx="29" ry="30" fill="#F9E7CE" opacity="0.9" />
+
+        {/* tay trái ôm hoa */}
+        <ellipse cx="61" cy="150" rx="14" ry="23" fill={`url(#${uid}-fur)`} transform="rotate(24 61 150)" />
+        <ellipse cx="54" cy="135" rx="10" ry="9" fill="#EDC69D" />
+        {/* tay phải vẫy */}
+        <g className="teddy-arm teddy-arm--wave">
+          <ellipse cx="147" cy="138" rx="14" ry="24" fill={`url(#${uid}-fur)`} transform="rotate(-26 147 138)" />
+          <ellipse cx="159" cy="119" rx="11" ry="10" fill="#EDC69D" />
+          <ellipse cx="156" cy="120" rx="4.2" ry="3.4" fill="#D48F76" opacity="0.75" />
+          <ellipse cx="162" cy="116" rx="2.4" ry="2" fill="#D48F76" opacity="0.7" />
         </g>
-        <ellipse cx="143" cy="140" rx="13" ry="24" fill="#D9A97E" transform="rotate(-20 143 140)" />
-        <circle cx="47" cy="58" r="22" fill="#C99468" />
-        <circle cx="47" cy="58" r="12" fill="#F2C4CF" />
-        <circle cx="137" cy="58" r="22" fill="#C99468" />
-        <circle cx="137" cy="58" r="12" fill="#F2C4CF" />
-        <ellipse cx="92" cy="84" rx="50" ry="44" fill="#D9A97E" />
-        <ellipse cx="92" cy="98" rx="25" ry="19" fill="#F6E3CC" />
-        <ellipse cx="92" cy="91" rx="8" ry="6" fill="#6B3A4A" />
-        <path d="M92 97 L92 103 M92 103 C 87 109 82 105 81 102 M92 103 C 97 109 102 105 103 102" stroke="#6B3A4A" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-        <circle cx="73" cy="76" r="5.4" fill="#4A2333" />
-        <circle cx="111" cy="76" r="5.4" fill="#4A2333" />
-        <circle cx="75" cy="74" r="1.8" fill="#FFF" />
-        <circle cx="113" cy="74" r="1.8" fill="#FFF" />
-        <ellipse cx="62" cy="92" rx="9" ry="5" fill="#F2A8B8" opacity="0.75" />
-        <ellipse cx="122" cy="92" rx="9" ry="5" fill="#F2A8B8" opacity="0.75" />
-        <path d="M126 120 C 140 124 147 138 143 150" stroke="#F286A6" strokeWidth="0" fill="none" />
-        <path d="M115 122 C 134 123 145 132 147 145" stroke="#F286A6" strokeWidth="5" fill="none" strokeLinecap="round" />
-        <path d="M147 145 L134 139 L146 131 Z" fill="#F286A6" />
-        <path d="M147 145 L135 153 L150 155 Z" fill="#F286A6" />
+
+        {/* tai */}
+        <circle cx="57" cy="60" r="23" fill={`url(#${uid}-fur)`} />
+        <circle cx="57" cy="60" r="12.5" fill="#F4B9C6" />
+        <circle cx="143" cy="60" r="23" fill={`url(#${uid}-fur)`} />
+        <circle cx="143" cy="60" r="12.5" fill="#F4B9C6" />
+
+        {/* đầu */}
+        <ellipse cx="101" cy="86" rx="53" ry="47" fill={`url(#${uid}-head)`} />
+        <ellipse cx="101" cy="72" rx="34" ry="19" fill="#FFF2E2" opacity="0.28" />
+        <ellipse cx="101" cy="103" rx="26" ry="20" fill={`url(#${uid}-muzzle)`} />
+
+        {/* mắt long lanh, chớp nhẹ */}
+        <g className="teddy-eyes">
+          <ellipse cx="81" cy="81" rx="7" ry="8.2" fill="#4A2532" />
+          <ellipse cx="121" cy="81" rx="7" ry="8.2" fill="#4A2532" />
+          <circle cx="83.4" cy="78" r="2.6" fill="#FFFFFF" />
+          <circle cx="123.4" cy="78" r="2.6" fill="#FFFFFF" />
+          <circle cx="79" cy="85" r="1.3" fill="#F7CFE0" opacity="0.85" />
+          <circle cx="119" cy="85" r="1.3" fill="#F7CFE0" opacity="0.85" />
+        </g>
+
+        {/* mũi + miệng + má */}
+        <ellipse cx="101" cy="98" rx="7" ry="5.2" fill="#5C3341" />
+        <ellipse cx="98.6" cy="96.2" rx="2.2" ry="1.4" fill="#FFFFFF" opacity="0.55" />
+        <path d="M101 103 V107 M101 107 C 96 113 90 109 89 105 M101 107 C 106 113 112 109 113 105" stroke="#6B3A4A" strokeWidth="2.3" fill="none" strokeLinecap="round" />
+        <ellipse cx="69" cy="97" rx="9.5" ry="5.2" fill="#F6A8B9" opacity="0.62" />
+        <ellipse cx="133" cy="97" rx="9.5" ry="5.2" fill="#F6A8B9" opacity="0.62" />
+
+        {/* nơ cổ */}
+        <g className="teddy-bow">
+          <path d="M100 111 C 88 101 74 103 77 113 C 80 123 94 119 100 114Z" fill={`url(#${uid}-bow)`} />
+          <path d="M102 111 C 114 101 128 103 125 113 C 122 123 108 119 102 114Z" fill={`url(#${uid}-bow)`} />
+          <circle cx="101" cy="113" r="6.6" fill="#E8638B" />
+          <circle cx="99" cy="111" r="2" fill="#FFD9E5" opacity="0.7" />
+        </g>
+
+        {/* cành tulip trên tay, vẽ sau cùng để luôn nổi bật */}
+        <g className="teddy-flower">
+          <path d="M58 141 C 48 128 42 116 40 104" stroke="#7FB08F" strokeWidth="3.6" fill="none" strokeLinecap="round" />
+          <path d="M49 126 C 38 124 31 117 29 108 C 39 107 47 114 49 123Z" fill="#A8D6B9" />
+          <path d="M41 96 C 25 84 25 62 41 52 C 57 62 57 84 41 96Z" fill={`url(#${uid}-petal)`} />
+          <path d="M41 88 C 31 74 32 60 41 55 C 50 62 52 76 41 88Z" fill="#FFD9E6" opacity="0.9" />
+          <path d="M41 54 C 31 62 26 74 27 85 C 34 82 40 72 41 62Z" fill="#F58AAC" />
+          <ellipse cx="35" cy="73" rx="3.4" ry="5.6" fill="#FFF3C8" opacity="0.65" transform="rotate(-24 35 73)" />
+        </g>
+
+        {/* lấp lánh */}
+        <g className="teddy-sparkles" fill="#FFF2C9">
+          <path d="M159 66 c1.6 5 3 6.4 8 8 -5 1.6 -6.4 3 -8 8 -1.6 -5 -3 -6.4 -8 -8 5 -1.6 6.4 -3 8 -8Z" opacity="0.9" />
+          <path d="M36 118 c1 3.2 1.9 4.1 5.1 5.1 -3.2 1 -4.1 1.9 -5.1 5.1 -1 -3.2 -1.9 -4.1 -5.1 -5.1 3.2 -1 4.1 -1.9 5.1 -5.1Z" opacity="0.7" />
+        </g>
       </g>
     </svg>
   );

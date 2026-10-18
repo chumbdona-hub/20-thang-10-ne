@@ -2,12 +2,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Background from "./components/Background";
 import Cinema from "./components/Cinema";
+import ConstellationSection from "./components/ConstellationSection";
+import GardenSection from "./components/GardenSection";
 import FinaleSection from "./components/FinaleSection";
 import GiftScreen from "./components/GiftScreen";
 import GirlsSection from "./components/GirlsSection";
 import Hero from "./components/Hero";
 import LetterSection from "./components/LetterSection";
 import ProgressBar from "./components/ProgressBar";
+import SectionBoundary from "./components/SectionBoundary";
 import WishesSection from "./components/WishesSection";
 import { useReveal } from "./hooks/useReveal";
 import { audio } from "./lib/audio";
@@ -66,6 +69,7 @@ export default function App() {
     const sections = Array.from(document.querySelectorAll<HTMLElement>("[data-mood]"));
     if (!sections.length) return;
     if (typeof IntersectionObserver === "undefined") return;
+    const seen = new WeakSet<Element>();
     const observer = new IntersectionObserver(
       (entries) => {
         if (cinemaOpen) return;
@@ -74,6 +78,11 @@ export default function App() {
           const mood = (entry.target as HTMLElement).dataset.mood;
           if (mood === "hero" || mood === "letter" || mood === "girls" || mood === "wishes" || mood === "finale") {
             audio.setMood(mood);
+          }
+          if (!seen.has(entry.target)) {
+            seen.add(entry.target);
+            audio.sfx("bling");
+            entry.target.classList.add("section-in-view");
           }
         });
       },
@@ -138,7 +147,9 @@ export default function App() {
           <Hero onOpenCinema={openCinema} />
           <LetterSection />
           <GirlsSection />
+          <SectionBoundary label="constellation"><ConstellationSection /></SectionBoundary>
           <WishesSection />
+          <SectionBoundary label="garden"><GardenSection /></SectionBoundary>
           <FinaleSection />
         </main>
       )}

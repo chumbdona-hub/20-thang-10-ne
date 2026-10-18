@@ -1,127 +1,226 @@
-// Section 1.5 — "cảnh phim" toàn màn hình: đếm ngược, lyric SRT cỡ lớn, trái tim hạt 3D.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+// Section 1.5 — "vũ trụ 20/10": tinh cầu ngọc trai + vòng chữ, lyric SRT, trái tim hạt tương tác.
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CONFIG } from "../data/config";
 import { SRT_TEXT } from "../data/lyrics";
 import { audio } from "../lib/audio";
 import { onFrame, prefersReducedMotion } from "../lib/loop";
+import { isLite } from "../lib/perf";
 import { mergeCuesForDisplay, parseSRT, type Cue } from "../lib/srt";
 import { clamp, easeOutCubic } from "../lib/utils";
-import { isLite } from "../lib/perf";
 
 type Props = { onClose: () => void };
-type Phase = "rotate" | "countdown" | "play";
-type PrevCue = { cue: Cue; variant: number } | null;
+type Phase = "rotate" | "gate" | "play";
 
-const ENTER_VARIANTS = ["slam", "scatter", "flip", "mask", "track", "glitch", "zoom", "wave", "word", "elastic"];
-const EXIT_VARIANTS = ["burst", "up", "fall", "dust", "whip"];
-const CHARS = ["scatter", "flip", "wave", "elastic"];
+const ENTER_VARIANTS = ["slam", "scatter", "flip", "mask", "track", "glitch", "zoom", "wave", "word", "elastic", "split", "haze"];
+const EXIT_VARIANTS = ["burst", "up", "fall", "dust", "whip", "shatter"];
+const CHARS = ["scatter", "flip", "wave", "elastic", "split"];
+const RING_TEXT = "CHÚC MỪNG 20/10 ✦ 11B7 ✦ ";
+const GATE_MS = 10000;
 
-const longestIndex = (words: string[]) =>
-  words.reduce((best, word, index) => (word.replace(/[^\p{L}]/gu, "").length > words[best].replace(/[^\p{L}]/gu, "").length ? index : best), 0);
+const ACCENTS: string[][] = [
+  ["sau này"],
+  ["nghẹn ngào"],
+  ["mối tình đầu"],
+  ["ngọt"],
+  ["từng viết"],
+  ["mặt trời"],
+  ["đốt cháy"],
+  ["thanh xuân"],
+  ["phải đi"],
+  ["một khi khác"],
+  ["trong tim"],
+  ["đừng quên"],
+  ["lần đầu tiên"],
+  ["yêu thương"],
+];
 
-function splitWords(text: string) {
+const normWord = (value: string) => value.toLowerCase().normalize("NFC").replace(/[^\p{L}\p{N}]/gu, "");
+
+function accentWords(text: string, cueIndex: number): Set<number> {
   const words = text.split(/\s+/);
-  const key = longestIndex(words);
-  return words.map((word, wi) => ({ word, wi, key: wi === key }));
+  const flat = words.map(normWord);
+  const phrases = ACCENTS[cueIndex] ?? [];
+  for (const phrase of phrases) {
+    const target = phrase.split(/\s+/).map(normWord).filter(Boolean);
+    if (!target.length) continue;
+    for (let start = 0; start + target.length <= flat.length; start += 1) {
+      if (target.every((part, offset) => flat[start + offset] === part)) {
+        return new Set(target.map((_, offset) => start + offset));
+      }
+    }
+  }
+  return new Set([0]);
 }
 
-function CueContent({ text, variant, exiting = false }: { text: string; variant: number; exiting?: boolean }) {
-  const words = splitWords(text);
+function CueContent({ text, variant, cueIndex, exiting = false }: { text: string; variant: number; cueIndex: number; exiting?: boolean }) {
+  const words = text.split(/\s+/).filter(Boolean);
+  const keys = accentWords(text, cueIndex);
   const perChar = !exiting && CHARS.includes(ENTER_VARIANTS[variant % ENTER_VARIANTS.length]);
+  const sizeClass = text.length > 36 ? " is-xlong" : text.length > 24 ? " is-long" : "";
   return (
-    <p className={`cue-text${text.length > 28 ? " is-long" : ""}`}>
-      {words.map(({ word, wi, key }) => (
-        <span className={`cue-word${key ? " is-key" : ""}`} key={`${wi}-${word}`} style={{ ["--wi" as string]: wi }}>
-          {perChar ? (
-            Array.from(word).map((char, ci) => (
-              <span className="cue-char" key={ci} style={{ ["--ci" as string]: wi * 4 + ci }}>
-                {char}
-              </span>
-            ))
-          ) : (
-            <span className="cue-piece">{word}</span>
-          )}
-          {wi < words.length - 1 ? " " : ""}
-        </span>
+    <p className={"cue-text" + sizeClass}>
+      {words.map((word, wi) => (
+        <Fragment key={`${wi}-${word}`}>
+          <span className={"cue-word" + (keys.has(wi) ? " is-key" : "")} style={{ ["--wi" as string]: wi }}>
+            {perChar ? (
+              Array.from(word).map((char, ci) => (
+                <span className="cue-char" key={ci} style={{ ["--ci" as string]: wi * 4 + ci }}>{char}</span>
+              ))
+            ) : (
+              <span className="cue-piece">{word}</span>
+            )}
+          </span>
+          {wi < words.length - 1 ? (wi === words.length - 2 ? "\u00A0" : " ") : ""}
+        </Fragment>
       ))}
     </p>
   );
 }
 
-type CanvasProps = {
+type ViewState = {
+  tx: number;
+  ty: number;
+  rx: number;
+  ry: number;
+  zoom: number;
+  dragging: boolean;
+  lx: number;
+  ly: number;
+  pinch: boolean;
+  pinchDist: number;
+  pinchZoom: number;
+  lastMove: number;
+  vx: number;
+};
+
+type Interact = {
+  attract: boolean;
+  ax: number;
+  ay: number;
+  taps: Array<{ x: number; y: number; at: number }>;
+  heartHit: number;
+};
+
+type HeartP = {
+  x: number;
+  y: number;
+  z: number;
+  size: number;
+  color: string;
+  phase: number;
+  sx: number;
+  sy: number;
+  layer: number;
+};
+
+type UniverseProps = {
   timeRef: React.MutableRefObject<number>;
   lyricEnd: number;
   heartStart: number;
   heartDuration: number;
   active: boolean;
+  viewRef: React.MutableRefObject<ViewState>;
+  interactRef: React.MutableRefObject<Interact>;
   onDone: () => void;
 };
 
-function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, onDone }: CanvasProps) {
+function UniverseCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, viewRef, interactRef, onDone }: UniverseProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const drag = useRef({ active: false, x: 0, base: 0 });
-  const dragRot = useRef(0);
   const doneRef = useRef(false);
 
-  const particles = useMemo(() => {
-    const lowPower = isLite();
-    const isMobile =
-      typeof window !== "undefined" &&
-      (window.matchMedia("(pointer: coarse)").matches || Math.min(window.innerWidth, window.innerHeight) < 700);
-    const isWeak = lowPower;
-    const count = lowPower ? 720 : isMobile ? 1050 : 1500;
-    const heart: { x: number; y: number; z: number; size: number; color: string; seed: number }[] = [];
-    for (let i = 0; i < count; i += 1) {
-      const t = Math.random() * Math.PI * 2;
-      const x = 16 * Math.sin(t) ** 3;
-      const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-      const shrink = 0.55 + Math.random() * 0.45;
-      heart.push({
-        x: x * shrink + (Math.random() - 0.5) * 0.7,
-        y: y * shrink + (Math.random() - 0.5) * 0.7,
-        z: (Math.random() - 0.5) * 3.4,
-        size: 0.9 + Math.random() * 1.9,
-        color: ["#FFD1E2", "#FF9FBE", "#FF7AA6", "#FFE3B5", "#F3C7FF"][i % 5],
-        seed: Math.random() * Math.PI * 2,
-      });
-    }
-    const stars = Array.from({ length: isWeak ? 52 : 84 }, () => ({
+  const data = useMemo(() => {
+    const lite = isLite();
+    const mobile = typeof window !== "undefined" && (window.matchMedia("(pointer: coarse)").matches || Math.min(window.innerWidth, window.innerHeight) < 700);
+    const heartCount = lite ? 980 : mobile ? 1350 : 1900;
+    const glowCount = lite ? 130 : mobile ? 190 : 260;
+    const palette = ["#FFFFFF", "#FFE7F2", "#FFB9D6", "#FF7FAE", "#DDB6FF"];
+
+    const outline: HeartP[] = [];
+    const glow: HeartP[] = [];
+    const addHeart = (count: number, layer: number) => {
+      for (let i = 0; i < count; i += 1) {
+        const t = (i / count) * Math.PI * 2;
+        const hx = 16 * Math.sin(t) ** 3;
+        const hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+        const thickness = layer === 0 ? (Math.random() - 0.5) * 1.4 : (Math.random() - 0.5) * 3.2;
+        const scale = 1 + thickness / 14;
+        const nx = hx * scale;
+        const ny = hy * scale;
+        const edge = Math.min(1, Math.hypot(nx / 16, ny / 14));
+        (layer === 0 ? outline : glow).push({
+          x: nx,
+          y: ny,
+          z: (Math.random() - 0.5) * (layer === 0 ? 3.4 : 6),
+          size: layer === 0 ? 0.85 + Math.random() * 1.7 : 2.0 + Math.random() * 3.4,
+          color: palette[clamp(Math.floor(edge * palette.length), 0, palette.length - 1)],
+          phase: Math.random() * Math.PI * 2,
+          sx: (Math.random() - 0.5) * 1.4,
+          sy: (Math.random() - 0.5) * 0.5,
+          layer,
+        });
+      }
+    };
+    addHeart(heartCount, 0);
+    addHeart(glowCount, 1);
+
+    const orbit = Array.from({ length: lite ? 3 : 4 }, (_, ring) => {
+      const dots = lite ? 40 : 58;
+      return Array.from({ length: dots }, (_, i) => ({
+        angle: (i / dots) * Math.PI * 2,
+        ring,
+        tilt: ring * 0.55 + 0.35,
+        speed: (ring % 2 === 0 ? 1 : -1) * (0.2 + ring * 0.05),
+        size: 0.6 + (i % 4) * 0.3,
+        color: ["#FFD6E8", "#FFE8B4", "#E0C6FF", "#FFB3D1"][ring % 4],
+      }));
+    });
+
+    const spiralCount = lite ? 42 : 76;
+    const spiral = Array.from({ length: spiralCount }, (_, i) => ({
+      offset: i / spiralCount,
+      angle: (i / spiralCount) * Math.PI * 5,
+      speed: 0.16 + (i % 5) * 0.01,
+    }));
+
+    const dustCount = lite ? 34 : 64;
+    const dust = Array.from({ length: dustCount }, () => ({
+      x: (Math.random() - 0.5) * 1.1,
+      y: 0.18 + Math.random() * 0.1,
+      vy: 0.04 + Math.random() * 0.1,
+      drift: (Math.random() - 0.5) * 0.06,
+      size: 0.5 + Math.random() * 1.1,
+      phase: Math.random() * Math.PI * 2,
+    }));
+
+    const stars = Array.from({ length: lite ? 90 : mobile ? 150 : 240 }, () => ({
       x: Math.random(),
       y: Math.random(),
       z: Math.random(),
-      s: 0.4 + Math.random() * 1.6,
+      size: 0.3 + Math.random() * 1.5,
       phase: Math.random() * Math.PI * 2,
+      color: ["#FFFFFF", "#FFEAF5", "#DCE9FF", "#FFF3D0"][Math.floor(Math.random() * 4)],
     }));
-    const petals = Array.from({ length: isWeak ? 14 : 26 }, () => ({
+
+    const hearts = Array.from({ length: 34 }, () => ({
+      x: (Math.random() - 0.5) * 1.2,
+      y: 0.2 + Math.random() * 0.8,
+      speed: 0.02 + Math.random() * 0.05,
+      size: 2 + Math.random() * 4,
+      sway: Math.random() * Math.PI * 2,
+      alpha: 0.2 + Math.random() * 0.5,
+    }));
+
+    // Hạt tương tác quanh tay: hút khi giữ, đẩy khi chạm.
+    const interactive = Array.from({ length: lite ? 40 : 70 }, () => ({
       x: Math.random(),
       y: Math.random(),
-      sx: 0.2 + Math.random(),
-      sy: 0.35 + Math.random(),
-      size: 3 + Math.random() * 7,
-      rot: Math.random() * Math.PI,
-      color: ["#FFC1D7", "#FFE1ED", "#FFB3D1", "#E4D4FF"][Math.floor(Math.random() * 4)],
-      phase: Math.random() * Math.PI * 2,
+      vx: 0,
+      vy: 0,
+      size: 0.6 + Math.random() * 1.3,
     }));
-    const ringCount = isWeak ? 2 : 3;
-    const dotsPerRing = isWeak ? 40 : 58;
-    const orbit = Array.from({ length: ringCount }, (_, ring) =>
-      Array.from({ length: dotsPerRing }, (_, i) => ({
-        angle: (i / dotsPerRing) * Math.PI * 2,
-        radius: 1 + ring * 0.12,
-        tilt: ring * 0.65 + 0.4,
-        speed: (ring % 2 === 0 ? 1 : -1) * (0.18 + ring * 0.05),
-        size: 0.7 + (i % 4) * 0.35,
-        ring,
-      })),
-    );
-    const spiralCount = isWeak ? 38 : 72;
-    const spiral = Array.from({ length: spiralCount }, (_, i) => ({
-      offset: i / spiralCount,
-      angle: (i / spiralCount) * Math.PI * 6,
-      radius: 1.5 + (i % 9) * 0.12,
-    }));
-    return { heart, stars, petals, orbit, spiral, weak: isWeak, mobile: isMobile };
+
+    return { outline, glow, orbit, spiral, dust, stars, hearts, interactive, lite, mobile, palette };
   }, []);
 
   useEffect(() => {
@@ -132,224 +231,293 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
     if (!ctx) return;
     let width = wrap.clientWidth || window.innerWidth;
     let height = wrap.clientHeight || window.innerHeight;
-    const ratio = Math.min(window.devicePixelRatio || 1, particles.weak ? 1.1 : particles.mobile ? 1.25 : 1.75);
-    let bgGradient: CanvasGradient | null = null;
-    let coreGradient: CanvasGradient | null = null;
-    let heartGlow: CanvasGradient | null = null;
+    const ratio = Math.min(window.devicePixelRatio || 1, data.lite ? 1.15 : data.mobile ? 1.35 : 1.75);
+    let baseGradient: CanvasGradient | null = null;
+    let coreGlow: CanvasGradient | null = null;
     const resize = () => {
       width = wrap.clientWidth || window.innerWidth;
       height = wrap.clientHeight || window.innerHeight;
       canvas.width = Math.floor(width * ratio);
       canvas.height = Math.floor(height * ratio);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-
-      // Cache gradient theo kích thước: tránh tạo mới mỗi khung hình.
-      bgGradient = ctx.createRadialGradient(width / 2, height * 0.48, 10, width / 2, height * 0.5, Math.max(width, height) * 0.78);
-      bgGradient.addColorStop(0, "rgba(72, 35, 88, 0.18)");
-      bgGradient.addColorStop(0.55, "rgba(31, 15, 50, 0)");
-      bgGradient.addColorStop(1, "rgba(18, 8, 32, 0.35)");
-
-      coreGradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.min(width, height) * 0.55);
-      coreGradient.addColorStop(0, "rgba(255, 208, 232, 1)");
-      coreGradient.addColorStop(0.45, "rgba(255, 196, 226, 0.28)");
-      coreGradient.addColorStop(1, "rgba(255, 208, 232, 0)");
-
-      heartGlow = ctx.createRadialGradient(width / 2, height / 2, 10, width / 2, height / 2, Math.min(width, height) * 0.46);
-      heartGlow.addColorStop(0, "rgba(255, 132, 177, 1)");
-      heartGlow.addColorStop(0.55, "rgba(217, 112, 199, 0.34)");
-      heartGlow.addColorStop(1, "rgba(140, 84, 200, 0)");
+      baseGradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.min(width, height) * 0.6);
+      baseGradient.addColorStop(0, "rgba(255, 214, 236, 0.18)");
+      baseGradient.addColorStop(0.55, "rgba(168, 120, 220, 0.05)");
+      baseGradient.addColorStop(1, "rgba(30, 10, 50, 0)");
+      coreGlow = ctx.createRadialGradient(width / 2, height * 0.5, 0, width / 2, height * 0.5, Math.min(width, height) * 0.3);
+      coreGlow.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+      coreGlow.addColorStop(0.16, "rgba(255, 220, 238, 0.75)");
+      coreGlow.addColorStop(0.42, "rgba(255, 160, 205, 0.28)");
+      coreGlow.addColorStop(1, "rgba(255, 150, 205, 0)");
     };
     resize();
     let resizeTimer = 0;
     const onResize = () => {
       window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(resize, 160);
+      resizeTimer = window.setTimeout(resize, 180);
     };
     window.addEventListener("resize", onResize, { passive: true });
     const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null;
     observer?.observe(wrap);
 
-    const onDown = (event: PointerEvent) => {
-      drag.current = { active: true, x: event.clientX, base: dragRot.current };
-    };
-    const onMove = (event: PointerEvent) => {
-      if (!drag.current.active) return;
-      dragRot.current = drag.current.base + (event.clientX - drag.current.x) / Math.max(180, width) * 2.6;
-    };
-    const onUp = () => {
-      drag.current.active = false;
-    };
-    canvas.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerup", onUp, { passive: true });
-
-    const heartPath = (x: number, y: number, s: number) => {
+    const reduce = prefersReducedMotion();
+    const heartPath = (cx: number, cy: number, s: number) => {
       ctx.beginPath();
-      ctx.moveTo(x, y + s * 0.3);
-      ctx.bezierCurveTo(x - s * 0.12, y, x - s * 0.6, y - s * 0.28, x - s * 0.5, y - s * 0.58);
-      ctx.bezierCurveTo(x - s * 0.4, y - s * 0.86, x - s * 0.06, y - s * 0.8, x, y - s * 0.48);
-      ctx.bezierCurveTo(x + s * 0.06, y - s * 0.8, x + s * 0.4, y - s * 0.86, x + s * 0.5, y - s * 0.58);
-      ctx.bezierCurveTo(x + s * 0.6, y - s * 0.28, x + s * 0.12, y, x, y + s * 0.3);
+      ctx.moveTo(cx, cy + s * 0.32);
+      ctx.bezierCurveTo(cx - s * 0.14, cy + s * 0.02, cx - s * 0.62, cy - s * 0.26, cx - s * 0.5, cy - s * 0.58);
+      ctx.bezierCurveTo(cx - s * 0.38, cy - s * 0.88, cx - s * 0.06, cy - s * 0.8, cx, cy - s * 0.46);
+      ctx.bezierCurveTo(cx + s * 0.06, cy - s * 0.8, cx + s * 0.38, cy - s * 0.88, cx + s * 0.5, cy - s * 0.58);
+      ctx.bezierCurveTo(cx + s * 0.62, cy - s * 0.26, cx + s * 0.14, cy + s * 0.02, cx, cy + s * 0.32);
       ctx.closePath();
     };
 
     const draw = () => {
       const now = timeRef.current;
       const beatLength = 60 / CONFIG.song.bpm;
-      const beatPos = ((now - CONFIG.song.beatOffset) % beatLength + beatLength) % beatLength;
+      const beatPos = (((now - CONFIG.song.beatOffset) % beatLength) + beatLength) % beatLength;
       const kick = Math.exp(-beatPos * 7);
+      const heartAge = now - heartStart;
+      const inHeart = heartAge > -0.05;
+      const lastTwo = clamp((heartAge - (heartDuration - 2)) / 2);
+      const explode = clamp((heartAge - (heartDuration - 0.35)) / 0.45);
+      const userRot = viewRef.current.ry * (Math.PI / 180);
+
       ctx.clearRect(0, 0, width, height);
 
-      // ---- nền: sao, cánh hoa, vệt sáng theo chiều sâu
-      if (bgGradient) {
-        ctx.fillStyle = bgGradient;
+      if (!data.lite && baseGradient) {
+        ctx.fillStyle = baseGradient;
         ctx.fillRect(0, 0, width, height);
       }
 
-      particles.stars.forEach((star) => {
-        const twinkle = 0.32 + 0.55 * (0.5 + 0.5 * Math.sin(now * (1.2 + star.z) + star.phase));
-        const depth = 0.35 + star.z;
-        ctx.globalAlpha = twinkle * (0.4 + star.z * 0.5);
-        ctx.fillStyle = star.z > 0.7 ? "#fff2d6" : "#fff8fd";
-        ctx.beginPath();
-        ctx.arc(star.x * width, (star.y + Math.sin(now * 0.06 + star.phase) * 0.01) * height, star.s * depth, 0, Math.PI * 2);
-        ctx.fill();
+      // ---- sao nền
+      data.stars.forEach((star) => {
+        const twinkle = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(now * (1.1 + star.z) + star.phase));
+        ctx.globalAlpha = twinkle * (0.45 + star.z * 0.5);
+        ctx.fillStyle = star.color;
+        const sx = star.x * width;
+        const sy = ((star.y + now * 0.002 * (0.4 + star.z)) % 1) * height;
+        const size = star.size * (0.6 + star.z);
+        if (data.lite) ctx.fillRect(sx, sy, size, size);
+        else {
+          ctx.beginPath();
+          ctx.arc(sx, sy, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
       });
+      ctx.globalAlpha = 1;
 
-      particles.petals.forEach((petal) => {
-        const drift = now * 0.02 * petal.sx;
-        const px = ((petal.x + drift) % 1.12) * width - width * 0.06;
-        const py = ((petal.y + now * 0.012 * petal.sy) % 1.12) * height - height * 0.06;
-        ctx.save();
-        ctx.globalAlpha = 0.16 + petal.size / 40 + kick * 0.06;
-        ctx.translate(px, py);
-        ctx.rotate(petal.rot + now * 0.22 + petal.phase);
-        ctx.fillStyle = petal.color;
+      // sao băng thỉnh thoảng
+      const shoot = Math.floor(now / 7);
+      const shootPos = (now % 7) / 7;
+      if (shootPos > 0.82) {
+        const p = (shootPos - 0.82) / 0.18;
+        const sx = width * (0.18 + (shoot % 3) * 0.22) + p * width * 0.45;
+        const sy = height * 0.14 + p * height * 0.34;
+        const gradient = ctx.createLinearGradient(sx, sy, sx - 90, sy - 42);
+        gradient.addColorStop(0, "rgba(255,255,255,0.9)");
+        gradient.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 1.4;
         ctx.beginPath();
-        ctx.ellipse(0, 0, petal.size * 0.5, petal.size, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      });
-
-      if (coreGradient) {
-        ctx.globalAlpha = 0.24 + kick * 0.2;
-        ctx.fillStyle = coreGradient;
-        ctx.fillRect(0, 0, width, height);
-        ctx.globalAlpha = 1;
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx - 90, sy - 42);
+        ctx.stroke();
       }
 
-      if (!activeRefValue.current || now < lyricEnd - 0.05) {
-        ctx.globalAlpha = 1;
-        return;
-      }
-
-      // ---- trái tim hạt
-      const age = now - heartStart;
-      const lastTwo = clamp((age - (heartDuration - 2)) / 2);
-      const burst = clamp((age - (heartDuration - 0.32)) / 0.4);
       const centerX = width / 2;
       const centerY = height * 0.5;
-      const baseScale = Math.min(width, height) / (particles.weak ? 24 : 22);
-      const pulse = 1 + kick * 0.075 * (1 - lastTwo * 0.4);
-      const heartScale = baseScale * pulse * (1 - lastTwo * 0.35 + burst * 1.6);
-      const rotationY = age * 0.3 + dragRot.current * 0.9 + 0.35;
 
-      if (!prefersReducedMotion() && !particles.weak) {
-        ctx.globalCompositeOperation = "lighter";
-      }
+      // ---- tương tác hạt quanh tay
+      const interact = interactRef.current;
+      data.interactive.forEach((p, index) => {
+        const px = p.x * width;
+        const py = p.y * height;
+        if (interact.attract) {
+          const dx = interact.ax - px;
+          const dy = interact.ay - py;
+          const dist = Math.hypot(dx, dy) || 1;
+          if (dist < 260) {
+            p.vx += (dx / dist) * 0.22;
+            p.vy += (dy / dist) * 0.22;
+          }
+        }
+        interact.taps.forEach((tap) => {
+          const age = (performance.now() - tap.at) / 1000;
+          if (age > 1.2) return;
+          const dx = px - tap.x;
+          const dy = py - tap.y;
+          const dist = Math.hypot(dx, dy) || 1;
+          if (dist < 120) {
+            const force = (1 - age / 1.2) * (120 - dist) * 0.0016;
+            p.vx += (dx / dist) * force * 60;
+            p.vy += (dy / dist) * force * 60;
+          }
+        });
+        p.vx *= 0.94;
+        p.vy *= 0.94;
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -0.02) p.x = -0.02;
+        if (p.x > 1.02) p.x = 1.02;
+        if (p.y < -0.02) p.y = -0.02;
+        if (p.y > 1.02) p.y = 1.02;
+        ctx.globalAlpha = 0.18 + (index % 5) * 0.05;
+        ctx.fillStyle = data.palette[index % data.palette.length];
+        const s = p.size;
+        ctx.fillRect(p.x * width, p.y * height, s, s);
+      });
+      interactRef.current.taps = interactRef.current.taps.filter((tap) => performance.now() - tap.at < 1300);
+      ctx.globalAlpha = 1;
 
-      if (heartGlow) {
-        ctx.globalAlpha = 0.3 + kick * 0.28;
-        ctx.fillStyle = heartGlow;
-        ctx.fillRect(0, 0, width, height);
+      // ---- trái tim nhỏ hồng bay lên rải rác (cả lúc lyric)
+      {
+        data.hearts.forEach((h) => {
+          const y = (h.y - (heartAge * h.speed) % 1.4) * height;
+          const x = width * (0.5 + h.x * 0.5) + Math.sin(now * 0.7 + h.sway) * 16;
+          ctx.globalAlpha = h.alpha * (0.5 + 0.5 * Math.sin(now + h.sway));
+          ctx.fillStyle = "#FFB4D3";
+          const size = h.size;
+          heartPath(x, y, size);
+          ctx.fill();
+        });
         ctx.globalAlpha = 1;
       }
 
-      // dòng xoắn ốc từ ngoài vào
-      particles.spiral.forEach((dot) => {
-        const progress = ((age * 0.16 + dot.offset) % 1);
-        const radius = (1.5 - progress * 1.3) * baseScale * 1.65;
-        const angle = dot.angle + age * (0.5 + lastTwo * 2.4);
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius * 0.7;
-        ctx.globalAlpha = (1 - progress) * 0.55 + 0.1;
-        ctx.fillStyle = progress > 0.7 ? "#fff1c6" : "#ffc2dd";
-        const s = (particles.weak ? 1.1 : 1.5) + (1 - progress) * 1.4;
-        ctx.fillRect(x, y, s, s);
-      });
+      if (!inHeart) return;
 
-      // bề mặt trái tim, xoay chậm theo trục Y
+      const age = Math.max(0, heartAge);
+      const baseScale = Math.min(width / 34, height / (data.lite ? 31 : 29));
+      const tapBoost = clamp(1 - (performance.now() - interactRef.current.heartHit) / 600);
+      const pulse = 1 + kick * 0.1 * (1 - lastTwo * 0.35) + tapBoost * 0.14 + Math.sin(age * 1.8) * 0.012;
+      const scale = baseScale * pulse * (1 - lastTwo * 0.4 + explode * 2.2);
+      const rotationY = age * 0.28 + userRot;
       const cosY = Math.cos(rotationY);
       const sinY = Math.sin(rotationY);
-      particles.heart.forEach((p, index) => {
-        const form = clamp((age - 0.1 - (index % 40) * 0.004) / 0.9);
-        const outward = 1 + lastTwo * 0.25 * Math.sin(p.seed + age);
-        const x0 = p.x * heartScale * outward;
-        const y0 = -p.y * heartScale * outward;
-        const z0 = p.z * heartScale * 0.16;
-        const rotatedX = x0 * cosY - z0 * sinY;
-        const rotatedZ = x0 * sinY + z0 * cosY;
-        const perspective = 1 + rotatedZ / (baseScale * 22);
-        const targetX = centerX + rotatedX * perspective;
-        const targetY = centerY + y0 * perspective;
-        const scatterX = centerX + Math.cos(p.seed * 9.1 + index) * width * 0.6;
-        const scatterY = centerY + Math.sin(p.seed * 5.7 + index) * height * 0.6;
-        let x = scatterX + (targetX - scatterX) * easeOutCubic(form);
-        let y = scatterY + (targetY - scatterY) * easeOutCubic(form);
-        let alpha = easeOutCubic(form) * (0.55 + 0.4 * (0.5 + 0.5 * Math.sin(p.seed + age * 1.4)));
-        if (lastTwo > 0) {
-          const collapse = easeOutCubic(lastTwo) * 0.3;
-          x += (centerX - x) * collapse;
-          y += (centerY - y) * collapse;
-          alpha *= 1 - lastTwo * 0.22;
-        }
-        if (burst > 0) {
-          const angle = p.seed * 3 + age;
-          x += Math.cos(angle) * burst * width * 0.7;
-          y += Math.sin(angle) * burst * height * 0.7;
-          alpha *= 1 - burst;
+
+      if (!reduce) ctx.globalCompositeOperation = "lighter";
+
+      if (!data.lite) {
+        const glow = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, Math.min(width, height) * 0.5);
+        glow.addColorStop(0, "rgba(255, 130, 178, 0.24)");
+        glow.addColorStop(0.6, "rgba(210, 120, 210, 0.09)");
+        glow.addColorStop(1, "rgba(140, 90, 200, 0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, width, height);
+      }
+
+      // dải sáng đứng xuyên tâm
+      const streak = ctx.createLinearGradient(centerX, centerY - baseScale * 3.2, centerX, centerY + baseScale * 2.6);
+      streak.addColorStop(0, "rgba(255,255,255,0)");
+      streak.addColorStop(0.4, "rgba(255, 236, 247, 0.22)");
+      streak.addColorStop(0.5, "rgba(255, 255, 255, 0.42)");
+      streak.addColorStop(0.62, "rgba(255, 208, 234, 0.18)");
+      streak.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = streak;
+      ctx.fillRect(centerX - baseScale * 0.045, centerY - baseScale * 3.2, baseScale * 0.09, baseScale * 5.8);
+
+      // lớp glow phía sau (hạt lớn, mờ)
+      data.glow.forEach((p) => {
+        const form = clamp((age - 0.1) / 1.2);
+        const x = p.x * scale;
+        const z = p.z * scale * 0.12;
+        const rx = x * cosY - z * sinY;
+        const alpha = form * (0.11 + kick * 0.09) * (0.6 + 0.4 * Math.sin(p.phase + age * 1.2));
+        ctx.globalAlpha = clamp(alpha);
+        ctx.fillStyle = p.color;
+        const s = p.size * (data.lite ? 1.4 : 2.1);
+        ctx.fillRect(centerX + rx, centerY - p.y * scale, s, s);
+      });
+
+      // bề mặt trái tim, hạt nhỏ li ti
+      data.outline.forEach((p, index) => {
+        const form = clamp((age - 0.04 - (index % 30) * 0.008) / 0.85);
+        const edgeBurst = 1 + lastTwo * 0.12 * Math.sin(p.phase + age * 2);
+        const x0 = p.x * scale * edgeBurst;
+        const y0 = -p.y * scale * edgeBurst;
+        const z0 = p.z * scale * (1.2 + explode * 2.2);
+        const rx = x0 * cosY - z0 * sinY;
+        const rz = x0 * sinY + z0 * cosY;
+        const perspective = 1 + rz / (scale * 30);
+        // Bụi tan từ giữa khi bắt đầu, rồi hút về đúng nét.
+        const sx = centerX + p.sx * width * (1 - form);
+        const sy = centerY + p.sy * height * (1 - form);
+        let x = sx + (centerX + rx * perspective - sx) * easeOutCubic(form);
+        let y = sy + (centerY + y0 * perspective - sy) * easeOutCubic(form);
+        let alpha = easeOutCubic(form) * (0.72 + 0.28 * (0.5 + 0.5 * Math.sin(p.phase + age * 1.6)));
+        if (explode > 0) {
+          const angle = p.phase * 3 + age * 1.2;
+          x += Math.cos(angle) * explode * width * 0.72;
+          y += Math.sin(angle) * explode * height * 0.72;
+          alpha *= 1 - explode;
         }
         ctx.globalAlpha = clamp(alpha);
         ctx.fillStyle = p.color;
-        const size = p.size * (particles.weak ? 0.9 : 1.2) * (0.65 + form * 0.35);
-        if (particles.weak) {
-          ctx.fillRect(x, y, size, size);
-        } else {
-          ctx.beginPath();
-          ctx.arc(x, y, size * 0.72, 0, Math.PI * 2);
-          ctx.fill();
-        }
+        const s = p.size * (0.9 + form * 0.4) * (data.lite ? 0.9 : 1.15);
+        ctx.fillRect(x, y, s, s);
       });
 
-      // các vòng quỹ đạo nghiêng như vành nguyên tử
-      particles.orbit.forEach((ring) => {
+      // vòng quỹ đạo
+      data.orbit.forEach((ring) => {
         ring.forEach((dot) => {
-          const angle = dot.angle + age * dot.speed * (1 + lastTwo * 3.4);
-          const radiusX = baseScale * (1.42 + dot.radius * 0.14) * (1 + kick * 0.04 + lastTwo * 0.2);
-          const radiusY = radiusX * (0.32 + dot.ring * 0.06);
-          const tilt = dot.tilt;
+          const angle = dot.angle + age * dot.speed * (1 + lastTwo * 3.6);
+          const radiusX = baseScale * (1.62 + dot.ring * 0.13) * (1 + kick * 0.035 + lastTwo * 0.22);
+          const radiusY = radiusX * (0.3 + dot.ring * 0.055);
           const px = Math.cos(angle) * radiusX;
           const py = Math.sin(angle) * radiusY;
+          const tilt = dot.tilt;
           const x = centerX + px * Math.cos(tilt) - py * Math.sin(tilt);
           const y = centerY + px * Math.sin(tilt) + py * Math.cos(tilt);
-          ctx.globalAlpha = (0.35 + kick * 0.35) * (1 - lastTwo * 0.2);
-          ctx.fillStyle = dot.ring === 1 ? "#ffe4ad" : dot.ring === 2 ? "#d8c5ff" : "#ffc4de";
-          ctx.beginPath();
-          ctx.arc(x, y, dot.size, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.globalAlpha = (0.32 + kick * 0.4) * (1 - lastTwo * 0.2);
+          ctx.fillStyle = dot.color;
+          ctx.fillRect(x, y, dot.size, dot.size);
         });
       });
 
-      // các trái tim nhỏ bắn ra theo nhịp
-      if (kick > 0.72 && !particles.weak) {
-        ctx.globalAlpha = (kick - 0.72) * 1.8;
-        ctx.fillStyle = "#ffd6e7";
+      // dòng xoắn ốc
+      data.spiral.forEach((dot) => {
+        const progress = (age * dot.speed + dot.offset) % 1;
+        const radius = (1.7 - progress * 1.5) * baseScale * 1.5;
+        const angle = dot.angle + age * (0.55 + lastTwo * 2.6);
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius * 0.72;
+        ctx.globalAlpha = (1 - progress) * 0.55 + 0.08;
+        ctx.fillStyle = progress > 0.72 ? "#FFF1C6" : "#FFC2DD";
+        const s = (data.lite ? 1 : 1.4) + (1 - progress) * 1.2;
+        ctx.fillRect(x, y, s, s);
+      });
+
+      // bụi trời rơi từ đáy tim
+      data.dust.forEach((d) => {
+        const fall = ((age * d.vy + d.y) % 1);
+        const x = centerX + d.x * baseScale * 2.2 + Math.sin(age * 0.8 + d.phase) * 8 + d.drift * width * fall;
+        const y = centerY + baseScale * 1.05 + fall * height * 0.32;
+        ctx.globalAlpha = (1 - fall) * 0.55;
+        ctx.fillStyle = "#FFE7F2";
+        ctx.fillRect(x, y, d.size, d.size);
+      });
+
+      // quả cầu sáng ở tâm
+      if (coreGlow && !data.lite) {
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = coreGlow;
+        ctx.fillRect(centerX - baseScale * 2, centerY - baseScale * 2, baseScale * 4, baseScale * 4);
+      }
+      const coreRadius = baseScale * (0.16 + kick * 0.025);
+      ctx.globalAlpha = 0.95;
+      ctx.fillStyle = "#FFF7FC";
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, coreRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // nhịp: vài trái tim nhỏ bắn ra
+      if (kick > 0.7 && !data.lite) {
+        ctx.globalAlpha = (kick - 0.7) * 1.6;
+        ctx.fillStyle = "#FFD6E8";
         for (let i = 0; i < 6; i += 1) {
           const angle = (i / 6) * Math.PI * 2 + age;
-          const dist = baseScale * (2.1 + i * 0.1);
-          heartPath(centerX + Math.cos(angle) * dist, centerY + Math.sin(angle) * dist * 0.6, 8);
+          heartPath(centerX + Math.cos(angle) * baseScale * 2.1, centerY + Math.sin(angle) * baseScale * 1.2, 7);
           ctx.fill();
         }
       }
@@ -357,34 +525,29 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
       ctx.globalCompositeOperation = "source-over";
       ctx.globalAlpha = 1;
 
-      if (age > heartDuration + 0.15 && !doneRef.current) {
+      if (heartAge > heartDuration + 0.1 && !doneRef.current) {
         doneRef.current = true;
         onDone();
       }
     };
 
-    const activeRefValue = { current: active };
-    let frameAcc = 0;
+    let acc = 0;
     const stop = onFrame((dt) => {
       if (!active) return;
-      frameAcc += dt;
-      // Máy yếu: vẽ tối đa ~30fps, vẫn đủ mượt cho hạt và giảm tải GPU/CPU.
-      const minStep = particles.mobile || particles.weak ? 1 / 30 : 1 / 60;
-      if (frameAcc < minStep) return;
-      frameAcc = 0;
+      acc += dt;
+      const minStep = reduce ? 1 / 20 : data.lite ? 1 / 26 : data.mobile ? 1 / 30 : 1 / 60;
+      if (acc < minStep) return;
+      acc = 0;
       draw();
     });
     return () => {
       stop();
       window.removeEventListener("resize", onResize);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      canvas.removeEventListener("pointerdown", onDown);
-      observer?.disconnect();
       window.clearTimeout(resizeTimer);
+      observer?.disconnect();
       ctx.clearRect(0, 0, width, height);
     };
-  }, [heartDuration, heartStart, lyricEnd, onDone, particles, timeRef]);
+  }, [data, heartDuration, heartStart, active, interactRef, lyricEnd, onDone, timeRef, viewRef]);
 
   return (
     <div className="cinema-canvas-wrap" ref={wrapRef} aria-hidden="true">
@@ -395,12 +558,10 @@ function CinemaCanvas({ timeRef, lyricEnd, heartStart, heartDuration, active, on
 
 export default function Cinema({ onClose }: Props) {
   const rawCues = useMemo(() => parseSRT(SRT_TEXT), []);
-  // Chỉ để hiển thị: gộp vài mốc vài chục ms thành câu đọc được.
   const cues = useMemo(() => mergeCuesForDisplay(rawCues), [rawCues]);
-  const lyricEnd = rawCues.length ? rawCues[rawCues.length - 1].end : 53.867;
+  const lyricEnd = rawCues.length ? rawCues[rawCues.length - 1].end : 46.033;
   const heartStart = lyricEnd;
   const heartDuration = CONFIG.song.heartDuration;
-  // Tổng cảnh phim đúng 59 giây: 8.633s mở màn không chữ + lyric + tim đập tới hết.
   const total = Math.max(CONFIG.song.duration, heartStart + heartDuration);
 
   const initialLandscape =
@@ -408,45 +569,47 @@ export default function Cinema({ onClose }: Props) {
 
   const [landscape, setLandscape] = useState(initialLandscape);
   const [forced, setForced] = useState(false);
-  const [phase, setPhase] = useState<Phase>(() => (initialLandscape ? "countdown" : "rotate"));
-  const [count, setCount] = useState(3);
+  const [phase, setPhase] = useState<Phase>(() => (initialLandscape ? "gate" : "rotate"));
   const [current, setCurrent] = useState<{ cue: Cue; index: number } | null>(null);
-  const [prev, setPrev] = useState<PrevCue>(null);
+  const [prev, setPrev] = useState<{ cue: Cue; variant: number; index: number } | null>(null);
   const [heartVisible, setHeartVisible] = useState(false);
   const [closing, setClosing] = useState(false);
   const [opening, setOpening] = useState(false);
+  const [gateHint, setGateHint] = useState("Chạm vào tinh cầu");
+  const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number; heart: boolean }>>([]);
 
   const timeRef = useRef(0);
   const runningRef = useRef(false);
   const lastRef = useRef(0);
   const finishedRef = useRef(false);
-  const songStarted = useRef(false);
-  const pausedPhase = useRef<"play">("play");
+  const startedRef = useRef(false);
   const cueIndexRef = useRef(-1);
   const prevTimer = useRef(0);
-  const beatRef = useRef(-1);
+  const progressRef = useRef<HTMLSpanElement>(null);
+  const cameraRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const progressRef = useRef<HTMLSpanElement>(null);
+  const autoTimer = useRef(0);
+  const hintTimer = useRef(0);
   const ready = landscape || forced;
 
-  // Thanh tiến độ chạy theo đồng hồ thật (59s), không re-render React mỗi khung hình.
+  const viewRef = useRef<ViewState>({
+    rx: 0, ry: 0, tx: 0, ty: 0, zoom: 1, dragging: false, lx: 0, ly: 0, pinch: false, pinchDist: 0, pinchZoom: 1, lastMove: 0, vx: 0,
+  });
+  const interactRef = useRef<Interact>({ attract: false, ax: 0, ay: 0, taps: [], heartHit: 0 });
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const longPress = useRef(0);
+  const tapStart = useRef({ x: 0, y: 0, at: 0, moved: 0 });
+
   useEffect(() => {
-    if (phase !== "play") return;
-    let acc = 0;
-    return onFrame((dt) => {
-      acc += dt;
-      if (acc < 0.08) return;
-      acc = 0;
-      const bar = progressRef.current;
-      if (bar) bar.style.transform = `scaleX(${clamp(timeRef.current / total).toFixed(4)})`;
-    });
-  }, [phase, total]);
+    // Cổng tinh cầu không phát nhạc; chỉ khi chạm mới bắt đầu.
+    if (phase !== "play") audio.setBed(0);
+  }, [phase]);
 
   const cleanupEnvironment = useCallback(() => {
     document.body.classList.remove("no-scroll", "cinema-lock");
     try {
-      audio.stopSong(0.7);
+      audio.stopSong(0.8);
       audio.setMood("letter");
     } catch {
       /* im lặng */
@@ -469,7 +632,8 @@ export default function Cinema({ onClose }: Props) {
     finishedRef.current = true;
     runningRef.current = false;
     setClosing(true);
-    audio.stopSong(0.8);
+    audio.stopSong(0.9);
+    audio.setBed(0.5);
     audio.setMood("letter");
     audio.sfx("sparkle");
     window.setTimeout(() => {
@@ -478,37 +642,68 @@ export default function Cinema({ onClose }: Props) {
     }, 620);
   }, [cleanupEnvironment, onClose]);
 
-  const beginPlay = useCallback(() => {
-    if (finishedRef.current) return;
-    audio.resume();
-    if (!songStarted.current) {
-      songStarted.current = true;
+  // Vào cảnh phim: cử chỉ chạm ở đây mở khoá âm thanh iPhone và bắt đầu song.mp3.
+  const start = useCallback(() => {
+    if (finishedRef.current || startedRef.current) return;
+    startedRef.current = true;
+    window.clearTimeout(autoTimer.current);
+    try {
+      audio.init();
+      audio.resume();
+      if (!audio.isStarted) audio.init();
       audio.setMood("cinema");
+      audio.setBed(0.12);
       audio.startSong();
-    } else {
-      audio.resumeSong();
+    } catch {
+      /* không có audio vẫn chạy cảnh */
     }
+    timeRef.current = 0;
     lastRef.current = performance.now();
     runningRef.current = true;
     setOpening(true);
     setPhase("play");
-    setCount(0);
-    window.setTimeout(() => setOpening(false), 1150);
-    if (timeRef.current === 0) audio.sfx("whoosh");
+    window.setTimeout(() => setOpening(false), 1100);
+    audio.sfx("whoosh");
+    audio.sfx("sparkle");
+    try {
+      const orientation = DeviceOrientationEvent as unknown as {
+        requestPermission?: () => Promise<string>;
+      };
+      if (orientation && typeof orientation.requestPermission === "function") {
+        void orientation.requestPermission().catch(() => undefined);
+      }
+    } catch {
+      /* không hỗ trợ */
+    }
   }, []);
 
+  // Tự bắt đầu sau 10 giây, nhưng KHÔNG mở khoá audio nếu không có cử chỉ.
+  useEffect(() => {
+    if (phase !== "gate" || !ready || closing) return;
+    setGateHint("Chạm vào tinh cầu");
+    hintTimer.current = window.setTimeout(() => setGateHint("Sắp tự bắt đầu…"), GATE_MS - 2500);
+    autoTimer.current = window.setTimeout(() => {
+      if (phase === "gate") {
+        setGateHint("Đang bắt đầu…");
+        start();
+      }
+    }, GATE_MS);
+    return () => {
+      window.clearTimeout(autoTimer.current);
+      window.clearTimeout(hintTimer.current);
+    };
+  }, [closing, phase, ready, start]);
+
+  // Đồng hồ: ưu tiên audio.currentTime; thiếu file thì chạy theo thời gian thực.
   useEffect(() => {
     const stop = onFrame(() => {
       if (phase !== "play" || !runningRef.current || document.hidden) return;
       const songTime = audio.hasSong ? audio.songTime() : null;
-      if (songTime !== null && songTime >= 0 && songTime < 600) {
-        timeRef.current = songTime;
-      } else {
-        // Đồng hồ nội bộ dùng thời gian thực, không dùng dt của rAF (có thể bị kẹp
-        // khi máy lag, khiến "video" 59s chạy chậm hơn thực tế).
+      if (songTime !== null && songTime >= 0 && songTime < 600) timeRef.current = songTime;
+      else {
         const wall = performance.now();
         const delta = lastRef.current ? (wall - lastRef.current) / 1000 : 0;
-        timeRef.current = Math.min(total + 2, timeRef.current + Math.max(0, Math.min(0.8, delta)));
+        timeRef.current = Math.min(total + 2, timeRef.current + clamp(delta, 0, 0.8));
       }
       lastRef.current = performance.now();
       const t = timeRef.current;
@@ -518,7 +713,6 @@ export default function Cinema({ onClose }: Props) {
         return;
       }
 
-      // đồng bộ lyric
       if (t < lyricEnd) {
         let nextIndex = -1;
         for (let i = 0; i < cues.length; i += 1) {
@@ -531,9 +725,9 @@ export default function Cinema({ onClose }: Props) {
           const previous = cueIndexRef.current;
           cueIndexRef.current = nextIndex;
           if (previous >= 0) {
-            setPrev({ cue: cues[previous], variant: previous % EXIT_VARIANTS.length });
+            setPrev({ cue: cues[previous], variant: previous % EXIT_VARIANTS.length, index: previous });
             window.clearTimeout(prevTimer.current);
-            prevTimer.current = window.setTimeout(() => setPrev(null), 280);
+            prevTimer.current = window.setTimeout(() => setPrev(null), 300);
           }
           setCurrent(nextIndex >= 0 ? { cue: cues[nextIndex], index: nextIndex } : null);
         }
@@ -541,30 +735,160 @@ export default function Cinema({ onClose }: Props) {
         setHeartVisible(true);
         setCurrent(null);
         setPrev(null);
-        audio.sfx("sparkle");
         audio.sfx("heartbeat");
+        audio.sfx("sparkle");
       }
-
-      // nhịp kick: vignette + punch nhẹ, không chớp mạnh
-      const beatLength = 60 / CONFIG.song.bpm;
-      const beat = Math.floor((t - CONFIG.song.beatOffset) / beatLength);
-      if (beat !== beatRef.current) {
-        beatRef.current = beat;
-        if (heartVisible && beat % 2 === 0) audio.sfx("heartbeat");
-        const stage = stageRef.current;
-        if (stage) {
-          stage.style.setProperty("--kick", "1");
-          window.setTimeout(() => stage.style.setProperty("--kick", "0"), 140);
-        }
+      if (progressRef.current) {
+        progressRef.current.style.transform = "scaleX(" + clamp(t / total).toFixed(4) + ")";
       }
     });
     return stop;
   }, [cues, finish, heartVisible, lyricEnd, phase, total]);
 
+  // Camera: kéo để xoay, tự trả về khi lyric; tim xoay tự do/chậm dần.
+  useEffect(() => {
+    const stop = onFrame((dt) => {
+      const view = viewRef.current;
+      const heart = heartVisible;
+      const idle = performance.now() - view.lastMove;
+      if (!view.dragging) {
+        if (heart) {
+          if (idle > 2000) view.ry += dt * 7;
+        } else {
+          view.rx += (0 - view.rx) * Math.min(1, dt * 3.4);
+          view.ry += (0 - view.ry) * Math.min(1, dt * 3.4);
+        }
+        view.zoom += (1 - view.zoom) * Math.min(1, dt * 3);
+      }
+      const camera = cameraRef.current;
+      if (camera) {
+        camera.style.transform =
+          "perspective(900px) rotateX(" + (view.rx + view.tx).toFixed(2) + "deg) rotateY(" + (view.ry + view.ty).toFixed(2) + "deg) scale(" +
+          (view.zoom * 1.06).toFixed(3) + ")";
+      }
+    });
+    return stop;
+  }, [heartVisible]);
+
+  const vibrate = (pattern: number | number[]) => {
+    try {
+      if ("vibrate" in navigator) navigator.vibrate(pattern);
+    } catch {
+      /* bỏ qua */
+    }
+  };
+
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (phase !== "play") return;
+    if (event.target instanceof Element && event.target.closest("button, [role='button'], a")) return;
+    const view = viewRef.current;
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+    if (pointers.current.size === 2) {
+      const [a, b] = Array.from(pointers.current.values());
+      view.pinch = true;
+      view.pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
+      view.pinchZoom = view.zoom;
+      return;
+    }
+    tapStart.current = { x: event.clientX, y: event.clientY, at: performance.now(), moved: 0 };
+    view.dragging = true;
+    view.lx = event.clientX;
+    view.ly = event.clientY;
+    interactRef.current.ax = event.clientX;
+    interactRef.current.ay = event.clientY;
+    window.clearTimeout(longPress.current);
+    longPress.current = window.setTimeout(() => {
+      interactRef.current.attract = true;
+      interactRef.current.ax = event.clientX;
+      interactRef.current.ay = event.clientY;
+      audio.sfx("sparkle");
+    }, 350);
+  };
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const view = viewRef.current;
+    if (pointers.current.has(event.pointerId)) pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (view.pinch && pointers.current.size >= 2) {
+      const [a, b] = Array.from(pointers.current.values());
+      const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      view.zoom = clamp(view.pinchZoom * (dist / (view.pinchDist || dist)), 0.8, 1.4);
+      return;
+    }
+    if (!view.dragging) return;
+    const dx = event.clientX - view.lx;
+    const dy = event.clientY - view.ly;
+    view.lx = event.clientX;
+    view.ly = event.clientY;
+    view.lastMove = performance.now();
+    view.vx = dx;
+    tapStart.current.moved += Math.abs(dx) + Math.abs(dy);
+    const limitY = heartVisible ? 45 : 20;
+    const limitX = heartVisible ? 180 : 35;
+    view.ry = clamp(view.ry + dx * 0.25, -limitX, limitX);
+    view.rx = clamp(view.rx - dy * 0.18, -limitY, limitY);
+    if (interactRef.current.attract) {
+      interactRef.current.ax = event.clientX;
+      interactRef.current.ay = event.clientY;
+    }
+  };
+
+  const addRipple = (clientX: number, clientY: number) => {
+    const id = Date.now() + Math.random();
+    const rect = stageRef.current?.getBoundingClientRect();
+    const x = rect ? clientX - rect.left : clientX;
+    const y = rect ? clientY - rect.top : clientY;
+    setRipples((list) => [...list.slice(-2), { id, x, y, heart: heartVisible }]);
+    window.setTimeout(() => setRipples((list) => list.filter((item) => item.id !== id)), 950);
+  };
+
+  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const view = viewRef.current;
+    window.clearTimeout(longPress.current);
+    interactRef.current.attract = false;
+    pointers.current.delete(event.pointerId);
+    tapStart.current.moved += Math.abs(event.clientX - tapStart.current.x) > 6 ? 1 : 0;
+    if (pointers.current.size < 2) view.pinch = false;
+    view.dragging = pointers.current.size > 0;
+    const isTap = performance.now() - tapStart.current.at < 340 && tapStart.current.moved < 8;
+    if (isTap && phase === "play") {
+      const x = event.clientX;
+      const y = event.clientY;
+      addRipple(x, y);
+      interactRef.current.taps.push({ x, y, at: performance.now() });
+      audio.sfx("pop");
+      vibrate(12);
+      if (heartVisible) {
+        const rect = stageRef.current?.getBoundingClientRect();
+        if (rect) {
+          const midX = rect.left + rect.width / 2;
+          const midY = rect.top + rect.height / 2;
+          if (Math.hypot(x - midX, y - midY) < Math.min(rect.width, rect.height) * 0.35) interactRef.current.heartHit = performance.now();
+        }
+        audio.sfx("heartbeat");
+      }
+    }
+    view.lastMove = performance.now();
+  };
+
+  // Nghiêng máy: parallax rất nhẹ, chỉ khi có quyền (iOS cần xin quyền trong cử chỉ).
+  useEffect(() => {
+    if (phase !== "play") return;
+    const onTilt = (event: DeviceOrientationEvent) => {
+      const view = viewRef.current;
+      if (view.dragging) return;
+      const gamma = typeof event.gamma === "number" ? event.gamma : 0;
+      const beta = typeof event.beta === "number" ? event.beta : 0;
+      view.ty = clamp(gamma * 0.35, -6, 6);
+      view.tx = clamp((beta - 45) * -0.16, -4, 4);
+    };
+    window.addEventListener("deviceorientation", onTilt);
+    return () => window.removeEventListener("deviceorientation", onTilt);
+  }, [phase]);
+
   useEffect(() => {
     const onOrientation = () => {
-      const next = window.matchMedia("(orientation: landscape)").matches || window.innerWidth > window.innerHeight;
-      setLandscape(next);
+      setLandscape(window.matchMedia("(orientation: landscape)").matches || window.innerWidth > window.innerHeight);
     };
     window.addEventListener("resize", onOrientation, { passive: true });
     window.addEventListener("orientationchange", onOrientation, { passive: true });
@@ -577,52 +901,33 @@ export default function Cinema({ onClose }: Props) {
   useEffect(() => {
     if (finishedRef.current || closing) return;
     if (!ready) {
-      if (phase === "play") pausedPhase.current = "play";
       runningRef.current = false;
       audio.pauseSong();
       setPhase("rotate");
       return;
     }
-    if (phase === "rotate") setPhase("countdown");
+    if (phase === "rotate") {
+      if (startedRef.current && !finishedRef.current) {
+        runningRef.current = true;
+        lastRef.current = performance.now();
+        audio.resumeSong();
+        setPhase("play");
+      } else {
+        setPhase("gate");
+      }
+    }
   }, [ready, phase, closing]);
-
-  useEffect(() => {
-    if (phase !== "countdown" || !ready || closing) return;
-    setCount(3);
-    audio.resume();
-    audio.sfx("tick");
-    const timers = [
-      window.setTimeout(() => {
-        setCount(2);
-        audio.sfx("tick");
-      }, 800),
-      window.setTimeout(() => {
-        setCount(1);
-        audio.sfx("tick");
-      }, 1600),
-      window.setTimeout(() => {
-        setCount(0);
-        audio.sfx("chime");
-        beginPlay();
-      }, 2400),
-    ];
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [beginPlay, closing, phase, ready]);
 
   useEffect(() => {
     document.body.classList.add("no-scroll", "cinema-lock");
     const overlay = overlayRef.current;
     try {
-      if (overlay && !document.fullscreenElement && overlay.requestFullscreen) {
-        void overlay.requestFullscreen().catch(() => undefined);
-      }
+      if (overlay && !document.fullscreenElement && overlay.requestFullscreen) void overlay.requestFullscreen().catch(() => undefined);
     } catch {
       /* trình duyệt không cho phép */
     }
     try {
-      const orientation = screen.orientation as ScreenOrientation & {
-        lock?: (value: string) => Promise<void>;
-      };
+      const orientation = screen.orientation as ScreenOrientation & { lock?: (value: string) => Promise<void> };
       void orientation?.lock?.("landscape").catch(() => undefined);
     } catch {
       /* không hỗ trợ */
@@ -634,105 +939,179 @@ export default function Cinema({ onClose }: Props) {
     return () => {
       window.removeEventListener("keydown", onKey);
       window.clearTimeout(prevTimer.current);
+      window.clearTimeout(autoTimer.current);
+      window.clearTimeout(longPress.current);
+      window.clearTimeout(hintTimer.current);
       runningRef.current = false;
       cleanupEnvironment();
     };
   }, [cleanupEnvironment, finish]);
 
   const variantIndex = current ? current.index % ENTER_VARIANTS.length : 0;
-  const palette = heartVisible ? 5 : current ? current.index % 6 : Math.min(5, Math.floor(timeRef.current / 1.6) % 5);
+  const palette = heartVisible ? 5 : current ? current.index % 6 : 0;
+  const ringChars = RING_TEXT.split("");
 
   return (
     <div
-      className={`cinema${closing ? " is-closing" : ""}${forced ? " is-forced" : ""}${opening ? " is-opening" : ""}`}
+      className={"cinema" + (closing ? " is-closing" : "") + (forced ? " is-forced" : "") + (opening ? " is-opening" : "")}
       ref={overlayRef}
       role="dialog"
       aria-modal="true"
       aria-label="Cảnh phim âm nhạc dành tặng các bạn nữ 11B7"
     >
       <div className="cinema-rotate">
-        <div className={`cinema-stage palette-${palette}${heartVisible ? " has-heart" : ""}`} ref={stageRef}>
-          <div className="cinema-sky" aria-hidden="true" />
-          {phase === "play" && (
-            <CinemaCanvas
-              timeRef={timeRef}
-              lyricEnd={lyricEnd}
-              heartStart={heartStart}
-              heartDuration={heartDuration}
-              active={!closing}
-              onDone={finish}
-            />
-          )}
+        <div
+          className={"cinema-stage palette-" + palette + (heartVisible ? " has-heart" : "")}
+          ref={stageRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+        >
+          <div className="cinema-universe" aria-hidden="true">
+            <span className="cinema-nebula cinema-nebula--a" />
+            <span className="cinema-nebula cinema-nebula--b" />
+            <span className="cinema-nebula cinema-nebula--c" />
+            <span className="cinema-nebula cinema-nebula--d" />
+            <span className="cinema-depth-stars" />
+          </div>
+
+          <div className="cinema-camera" ref={cameraRef}>
+            {phase === "play" && (
+              <UniverseCanvas
+                timeRef={timeRef}
+                lyricEnd={lyricEnd}
+                heartStart={heartStart}
+                heartDuration={heartDuration}
+                active={!closing}
+                viewRef={viewRef}
+                interactRef={interactRef}
+                onDone={finish}
+              />
+            )}
+          </div>
+
           <div className="cinema-vignette" aria-hidden="true" />
           {opening && <span className="cinema-flash" aria-hidden="true" />}
+          {opening && (
+            <span className="cinema-pearl-burst" aria-hidden="true">
+              {Array.from({ length: 26 }, (_, i) => (
+                <i key={i} style={{ ["--i" as string]: i }} />
+              ))}
+            </span>
+          )}
           <span className="cinema-shockwave" aria-hidden="true" />
+          <div className="cinema-ripples" aria-hidden="true">
+            {ripples.map((ripple) => (
+              <span
+                key={ripple.id}
+                className={"cinema-ripple" + (ripple.heart ? " is-heart" : "")}
+                style={{ left: ripple.x, top: ripple.y }}
+              />
+            ))}
+          </div>
 
-          {phase === "play" && !heartVisible && (
-            <div className={`cinema-prelude${current ? " is-hidden" : ""}`} aria-hidden="true">
-              <span className="cinema-prelude__halo" />
-              <span className="cinema-prelude__ring" />
-              <span className="cinema-prelude__ring cinema-prelude__ring--two" />
-              <span className="cinema-prelude__orb" />
-              <span className="cinema-prelude__orb cinema-prelude__orb--two" />
+          {phase === "gate" && (
+            <div className="cinema-gate">
+              <div
+                className="gate-sphere-wrap"
+                role="button"
+                tabIndex={0}
+                onClick={start}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    start();
+                  }
+                }}
+                aria-label="Chạm vào tinh cầu để bắt đầu cảnh phim"
+              >
+                <span className="gate-glow" aria-hidden="true" />
+                <span className="gate-sphere" aria-hidden="true">
+                  <span className="gate-sphere__shine" />
+                </span>
+                {[0, 1, 2].map((ring) => (
+                  <span className={"gate-ring gate-ring--" + ring} key={ring} aria-hidden="true">
+                    {ringChars.map((char, index) => (
+                      <span
+                        key={index}
+                        className="gate-ring__char"
+                        style={{
+                          ["--a" as string]: (index / ringChars.length) * 360,
+                          ["--r" as string]: 0.52 + ring * 0.13,
+                        }}
+                      >
+                        {char === " " ? "\u00A0" : char}
+                      </span>
+                    ))}
+                  </span>
+                ))}
+              </div>
+              <span className="gate-hit">
+                <span className="gate-hint">{gateHint}</span>
+                <span className="gate-hint__note">hoặc chờ vài giây, cảnh phim sẽ tự mở</span>
+              </span>
             </div>
           )}
 
-          {phase === "play" && heartVisible && (
-            <div
-              className="cinema-beatwords"
-              aria-hidden="true"
-              style={{ ["--beat" as string]: `${(60 / CONFIG.song.bpm).toFixed(3)}s` }}
-            >
-              <span>thương</span>
-              <span>11B7</span>
-              <span>rạng rỡ</span>
-              <span>20·10</span>
-              <span>dịu dàng</span>
-              <span>xinh</span>
-              <span className="cinema-beatwords__giant">♥</span>
+          {phase === "play" && (
+            <div className="cinema-anchor" aria-hidden="true">
+              <span className="cinema-anchor__glow" />
+              <span className="cinema-anchor__pearl" />
+              <span className="cinema-anchor__ring" />
             </div>
+          )}
+
+          {phase === "play" && !heartVisible && current && (
+            <span className="cinema-cue-sweep" aria-hidden="true" key={"sweep-" + current.index} />
           )}
 
           {phase === "play" && !heartVisible && (
             <div className="cinema-lyrics" aria-live="polite" aria-atomic="true">
               {current && (
-                <span
-                  className="cinema-echo"
-                  aria-hidden="true"
-                  key={`echo-${current.index}`}
-                  style={{ ["--beat" as string]: `${(60 / CONFIG.song.bpm).toFixed(3)}s` }}
-                >
+                <span className="cinema-echo" aria-hidden="true" key={"echo-" + current.index} style={{ ["--beat" as string]: (60 / CONFIG.song.bpm).toFixed(3) + "s" }}>
                   {current.cue.text}
                 </span>
               )}
               {prev && (
-                <div
-                  className={`cinema-cue is-exiting cue-exit--${EXIT_VARIANTS[prev.variant]}`}
-                  key={`prev-${prev.variant}`}
-                >
-                  <CueContent text={prev.cue.text} variant={prev.variant} exiting />
+                <div className={"cinema-cue is-exiting cue-exit--" + EXIT_VARIANTS[prev.variant % EXIT_VARIANTS.length]} key={"prev-" + prev.index}>
+                  <CueContent text={prev.cue.text} variant={prev.variant} cueIndex={prev.index} exiting />
                 </div>
               )}
               {current && (
-                <div
-                  className={`cinema-cue cue-enter--${ENTER_VARIANTS[variantIndex]}`}
-                  key={`cue-${current.index}`}
-                >
-                  <CueContent text={current.cue.text} variant={variantIndex} />
+                <div className={"cinema-cue cue-enter--" + ENTER_VARIANTS[variantIndex]} key={"cue-" + current.index}>
+                  <CueContent text={current.cue.text} variant={variantIndex} cueIndex={current.index} />
                 </div>
               )}
             </div>
           )}
 
-          {phase === "countdown" && (
-            <div className="cinema-countdown" aria-live="polite">
-              <span className="cinema-countdown__caption">Sẵn sàng nha…</span>
-              <span className="cinema-countdown__number" key={count}>
-                {count > 0 ? count : "♡"}
-              </span>
-              <span className="cinema-countdown__ring" aria-hidden="true" />
-            </div>
+          {phase === "play" && heartVisible && (
+            <>
+              <div className="heart-rings" aria-hidden="true">
+                {[0, 1, 2].map((ring) => (
+                  <span className={"heart-ring heart-ring--" + ring} key={ring}>
+                    {RING_TEXT.split("").map((char, index) => (
+                      <span
+                        key={index}
+                        className="heart-ring__char"
+                        style={{
+                          ["--a" as string]: (index / RING_TEXT.length) * 360,
+                          ["--rr" as string]: 0.9 + ring * 0.16,
+                        }}
+                      >
+                        {char === " " ? "\u00A0" : char}
+                      </span>
+                    ))}
+                  </span>
+                ))}
+              </div>
+              <div className="cinema-love-notes" aria-hidden="true"><span>♡</span><span>✿</span><span>♡</span><span>✦</span><span>♡</span></div>
+            </>
           )}
+
+          {phase === "play" && heartVisible && <p className="cinema-touch-hint">Chạm vào tinh cầu ♡</p>}
+          {phase === "play" && <div className="cinema-letterbox" aria-hidden="true" />}
 
           {phase === "rotate" && (
             <div className="cinema-portrait">
@@ -747,20 +1126,14 @@ export default function Cinema({ onClose }: Props) {
                 </svg>
               </div>
               <p className="cinema-portrait__title">Xoay ngang điện thoại để xem nhé 📱↪️</p>
-              <p className="cinema-portrait__text">
-                Cảnh phim được làm cho màn hình ngang. Xoay máy rồi bọn tớ bắt đầu ngay.
-              </p>
-              <button type="button" className="cinema-portrait__fallback" onClick={() => setForced(true)}>
-                Không xoay được? Bấm vào đây
-              </button>
-              <button type="button" className="cinema-portrait__skip" onClick={finish}>
-                Bỏ qua bất ngờ này
-              </button>
+              <p className="cinema-portrait__text">Cảnh phim được làm cho màn hình ngang. Xoay máy rồi bọn tớ bắt đầu ngay.</p>
+              <button type="button" className="cinema-portrait__fallback" onClick={() => setForced(true)}>Không xoay được? Bấm vào đây</button>
+              <button type="button" className="cinema-portrait__skip" onClick={finish}>Bỏ qua bất ngờ này</button>
             </div>
           )}
 
           {phase === "play" && (
-            <span className={`cinema-progress${heartVisible ? " is-heart" : ""}`} aria-hidden="true">
+            <span className={"cinema-progress" + (heartVisible ? " is-heart" : "")} aria-hidden="true">
               <span ref={progressRef} />
             </span>
           )}
@@ -770,11 +1143,7 @@ export default function Cinema({ onClose }: Props) {
       <button type="button" className="cinema-skip" onClick={finish} aria-label="Bỏ qua cảnh phim">
         Bỏ qua <span aria-hidden="true">⏭</span>
       </button>
-      {phase === "play" && heartVisible && (
-        <p className="cinema-drag-hint" aria-hidden="true">
-          kéo ngang để xoay trái tim
-        </p>
-      )}
+      {phase === "play" && heartVisible && <p className="cinema-drag-hint" aria-hidden="true">kéo để xoay · chạm để thả tim</p>}
     </div>
   );
 }

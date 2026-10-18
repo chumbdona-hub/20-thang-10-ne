@@ -7,9 +7,9 @@ export const CONFIG = {
     url: "assets/audio/song.mp3",
     bpm: 100,
     beatOffset: 0,
-    // Cảnh phim dài đúng 59 giây: lyric cuối kết thúc ~53.87s, tim đập ~5.13s cuối.
+    // Cảnh phim dài đúng 59 giây: lyric mới kết thúc 46.03s, trái tim đập ~12.97s cuối.
     duration: 59,
-    heartDuration: 5.133,
+    heartDuration: 12.967,
   },
   girls: [
     "Mai Thị Vân Anh",
@@ -77,7 +77,7 @@ export const CONFIG = {
     "20/10 vui vẻ. Và hãy luôn nhớ rằng, các cậu quý giá hơn mọi lời khen.",
   ],
   finalLetter: [
-    "Gửi 16 cô gái nhỏ của 11B7,",
+    "Gửi các cô gái nhỏ của 11B7,",
     "Có thể bọn tớ chẳng nói được lời nào cho thật hay. Nhưng tụi tớ thật lòng thấy lớp mình đẹp hơn khi có các cậu.",
     "Mỗi người trong các cậu đều đang tự viết một câu chuyện riêng, vụng về một chút, nhưng rất đáng yêu.",
     "Cảm ơn vì những tràng cười, những chiếc kẹo chia đôi và cả những ngày im lặng ngồi cạnh nhau.",

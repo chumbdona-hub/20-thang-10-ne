@@ -95,7 +95,7 @@ export default function LetterSection() {
               <span>·10·</span>
               <span>11B7</span>
             </span>
-            <p className="letter-greeting script">Gửi 16 cô gái nhỏ của tớ,</p>
+            <p className="letter-greeting script">Gửi các cô gái nhỏ của tớ,</p>
             {CONFIG.introLetter.map((line, index) => (
               <p className={`letter-line${index === CONFIG.introLetter.length - 1 ? " letter-line--final" : ""}`} key={line}>
                 {line}

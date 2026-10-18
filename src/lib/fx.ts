@@ -184,9 +184,11 @@ function draw(dt: number) {
 /** Gọi một lần sau khi mở quà: vệt sáng nhỏ theo tay/chuột. */
 export function enableSparkleTrail() {
   if (!ensure()) return () => undefined;
+  const coarse = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+  const throttle = coarse ? 150 : 80;
   const onMove = (event: PointerEvent | TouchEvent) => {
     const now = performance.now();
-    if (now - lastTrail < 70) return;
+    if (now - lastTrail < throttle) return;
     lastTrail = now;
     let x = 0;
     let y = 0;
@@ -200,7 +202,7 @@ export function enableSparkleTrail() {
       y = event.clientY;
     }
     burst(x, y, {
-      count: prefersReducedMotion() ? 1 : 3,
+      count: prefersReducedMotion() ? 1 : coarse ? 2 : 3,
       speedMin: 5,
       speedMax: 32,
       gravity: -10,

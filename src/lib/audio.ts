@@ -16,7 +16,14 @@ type SfxName =
   | "wish-arrive"
   | "wish-grow"
   | "wish-vanish"
-  | "bell";
+  | "bell"
+  | "type"
+  | "found"
+  | "envelope"
+  | "letter-tick"
+  | "star"
+  | "plant"
+  | "teacher";
 
 const MOODS: Record<Mood, { base: number; octave: number; bell: boolean; pad: number }> = {
   hero: { base: 523.25, octave: 1, bell: false, pad: 0.03 },
@@ -122,6 +129,16 @@ class AudioEngine {
   resume() {
     try {
       if (this.ctx && this.ctx.state !== "running") void this.ctx.resume();
+    } catch {
+      /* im lặng */
+    }
+  }
+
+  /** Điều chỉnh riêng lớp nhạc nền (0 = im lặng) để cổng tinh cầu không có nhạc. */
+  setBed(level: number) {
+    if (!this.ctx || !this.musicGain) return;
+    try {
+      this.musicGain.gain.setTargetAtTime(Math.max(0, level), this.ctx.currentTime, 0.5);
     } catch {
       /* im lặng */
     }
@@ -333,8 +350,94 @@ class AudioEngine {
           this.tone("bell", f, 1.1, { gain: 0.04, delay: i * 0.12 }),
         );
         break;
+      case "type":
+        this.tone("type", 1400 + Math.random() * 260, 0.035, { type: "triangle", gain: 0.012 });
+        break;
+      case "letter-tick":
+        this.tone("letter-tick", 900 + Math.random() * 180, 0.05, { type: "sine", gain: 0.014 });
+        break;
+      case "found":
+        [783.99, 1046.5, 1318.5].forEach((f, i) =>
+          this.tone("found", f, 0.5, { gain: 0.035, delay: i * 0.09 }),
+        );
+        break;
+      case "envelope":
+        this.noiseHit(0.05, 0.32, 1500);
+        this.tone("envelope", 320, 0.28, { type: "triangle", gain: 0.028, to: 520 });
+        break;
+      case "star":
+        this.tone("star", 1560 + up * 120, 0.28, { gain: 0.022 });
+        this.tone("star2", 2340, 0.22, { gain: 0.013, delay: 0.04 });
+        break;
+      case "plant":
+        this.tone("plant", 220, 0.26, { type: "sine", gain: 0.05, to: 420 });
+        this.noiseHit(0.025, 0.18, 600);
+        break;
+      case "teacher":
+        [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) =>
+          this.tone("teacher", f, 1.4, { gain: 0.032, delay: i * 0.14 }),
+        );
+        break;
       default:
         break;
+    }
+  }
+
+  /**
+   * Mở khoá phần tử audio của bài hát ngay trong cử chỉ chạm đầu tiên (iOS):
+   * play() rồi pause() + tua về 0, âm lượng 0 để không nghe thấy.
+   */
+  unlockSong() {
+    try {
+      if (!this.songEl) {
+        const el = new Audio();
+        el.src = CONFIG.song.url;
+        el.preload = "auto";
+        el.loop = false;
+        el.volume = 0;
+        el.setAttribute("playsinline", "true");
+        el.addEventListener("error", () => {
+          this.songReady = false;
+        });
+        el.addEventListener("loadedmetadata", () => {
+          this.songReady = true;
+        });
+        if (this.ctx && this.master) {
+          const gain = this.ctx.createGain();
+          gain.gain.value = 0;
+          gain.connect(this.master);
+          try {
+            const source = this.ctx.createMediaElementSource(el);
+            source.connect(gain);
+          } catch {
+            /* Safari cũ: vẫn phát qua phần tử audio */
+          }
+          this.songGain = gain;
+        }
+        this.songEl = el;
+      }
+      const pending = this.songEl.play();
+      if (pending && typeof pending.then === "function") {
+        pending
+          .then(() => {
+            try {
+              this.songEl!.pause();
+              this.songEl!.currentTime = 0;
+              this.songEl!.volume = 1;
+            } catch {
+              /* bỏ qua */
+            }
+          })
+          .catch(() => {
+            try {
+              if (this.songEl) this.songEl.volume = 1;
+            } catch {
+              /* bỏ qua */
+            }
+          });
+      }
+    } catch {
+      /* trình duyệt không cho mở khoá, cảnh phim vẫn tự chạy */
     }
   }
 

@@ -250,11 +250,13 @@
 
 .cue-text {
   margin: 0;
-  max-width: 88vw;
-  font-family: "Poppins", "Baloo 2", sans-serif;
+  min-width: 0;
+  max-width: min(86vw, 1080px);
+  font-family: "Poppins", "Baloo 2", "Quicksand", sans-serif;
   font-weight: 900;
   font-size: clamp(1.7rem, min(8vw, 15dvh), 5.8rem);
-  line-height: 1.04;
+  line-height: 1.06;
+  font-feature-settings: "kern" 1, "liga" 1;
   letter-spacing: -0.025em;
   text-align: center;
   text-wrap: balance;
@@ -267,22 +269,30 @@
 }
 
 .cue-text.is-long {
-  font-size: clamp(1.45rem, min(6.4vw, 12.4dvh), 4.9rem);
+  font-size: clamp(1.4rem, min(6.5vw, 12.4dvh), 4.9rem);
+}
+
+.cue-text.is-xlong {
+  font-size: clamp(1.28rem, min(5.4vw, 10.6dvh), 4.1rem);
+  line-height: 1.1;
 }
 
 .cue-word {
   display: inline;
-  white-space: pre;
+  white-space: normal;
 }
 
 .cue-word.is-key {
-  color: #ffe4a8;
+  display: inline-block;
+  max-width: 100%;
+  color: #ffe2a6;
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-weight: 800;
+  transform: rotate(-1.2deg);
   text-shadow:
-    0 0 18px rgba(255, 221, 158, 0.7),
-    0 0 44px rgba(255, 177, 211, 0.45),
-    0 3px 0 rgba(84, 30, 65, 0.28);
-  font-style: italic;
-  font-weight: 900;
+    0 0 18px rgba(255, 221, 158, 0.72),
+    0 0 44px rgba(255, 177, 211, 0.5),
+    0 3px 0 rgba(84, 30, 65, 0.3);
 }
 
 .cue-word.is-key .cue-char {
@@ -292,6 +302,10 @@
 .cue-char {
   display: inline-block;
   white-space: pre;
+}
+
+.cue-piece {
+  display: inline;
 }
 
 /* Vào: 10 kiểu khác nhau */
@@ -1076,5 +1090,1182 @@ html[data-lite="true"] .cinema-beatwords__giant {
   }
   .cinema-beatwords span {
     opacity: 0.35;
+  }
+}
+
+
+/* ---- Hai kiểu vào mới: toả đôi và mờ ảo ---- */
+.cue-enter--split .cue-char {
+  animation: charSplit 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--ci) * 11ms);
+}
+
+@keyframes charSplit {
+  0% {
+    opacity: 0;
+    transform: translate3d(calc((var(--ci) - 14) * 4px), 0, 0) rotate(calc((var(--ci) - 14) * 1.2deg)) scale(0.86);
+  }
+  62% {
+    opacity: 1;
+    transform: translate3d(calc((var(--ci) - 14) * -0.35px), -3px, 0) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0) scale(1);
+  }
+}
+
+.cue-enter--haze .cue-text {
+  animation: cueHaze 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cueHaze {
+  0% {
+    opacity: 0;
+    transform: scale(1.14);
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 0 rgba(255, 220, 240, 0);
+  }
+  60% {
+    opacity: 1;
+    letter-spacing: 0.01em;
+  }
+  100% {
+    opacity: 1;
+    letter-spacing: -0.025em;
+    transform: scale(1);
+    text-shadow:
+      0 2px 0 rgba(63, 22, 56, 0.28),
+      0 0 24px rgba(255, 192, 224, 0.4),
+      0 0 60px rgba(219, 124, 190, 0.24);
+  }
+}
+
+.cue-exit--shatter .cue-char,
+.cue-exit--shatter .cue-piece {
+  display: inline-block;
+  animation: exitShatter 0.26s cubic-bezier(0.4, 0, 1, 1) both;
+  animation-delay: calc(var(--ci, var(--wi, 0)) * 8ms);
+}
+
+@keyframes exitShatter {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc((var(--ci, 4) - 8) * 5px), calc((var(--wi, 2) + 1) * 10px), 0) rotate(calc((var(--ci, 3) - 6) * 4deg));
+  }
+}
+
+/* ==================== KHUNG PHIM & HIỆU ỨNG MỚI ==================== */
+.cinema-letterbox {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.cinema-letterbox::before,
+.cinema-letterbox::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: clamp(6px, 2.4vh, 22px);
+  background: linear-gradient(180deg, rgba(12, 4, 20, 0.9), rgba(12, 4, 20, 0.28) 70%, transparent);
+}
+
+.cinema-letterbox::before {
+  top: 0;
+}
+
+.cinema-letterbox::after {
+  bottom: 0;
+  transform: rotate(180deg);
+}
+
+.cinema-lightleak {
+  position: absolute;
+  z-index: 0;
+  right: -18vmax;
+  top: -22vmax;
+  width: 56vmax;
+  height: 56vmax;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 42% 42%, rgba(255, 196, 224, 0.2), rgba(255, 168, 208, 0.08) 42%, transparent 68%),
+    radial-gradient(circle at 62% 64%, rgba(255, 221, 174, 0.12), transparent 58%);
+  animation: lightLeakDrift 22s ease-in-out infinite;
+}
+
+@keyframes lightLeakDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate3d(-6vmax, 5vmax, 0) scale(1.15);
+    opacity: 1;
+  }
+}
+
+/* Vòng sóng quanh trái tim, reset theo từng nhịp */
+.cinema-heart-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+}
+
+.heart-fx__ring {
+  position: absolute;
+  width: min(48vmin, 380px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 214, 234, 0.5);
+  animation: heartRing 1.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.heart-fx__ring--two {
+  animation-delay: 0.12s;
+  width: min(54vmin, 430px);
+  border-color: rgba(255, 224, 171, 0.32);
+}
+
+.heart-fx__ring--three {
+  animation-delay: 0.26s;
+  width: min(61vmin, 490px);
+  border-color: rgba(219, 190, 255, 0.22);
+}
+
+@keyframes heartRing {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.55);
+  }
+  70% {
+    opacity: 0.18;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+/* Nhịp sóng âm thanh nhỏ ở đáy */
+.cinema-wave {
+  position: absolute;
+  left: 50%;
+  bottom: max(2.1rem, calc(env(safe-area-inset-bottom) + 1.4rem));
+  translate: -50% 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 22px;
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.cinema-wave span {
+  width: 3px;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe3b4, #ffb1ce);
+  transform-origin: 50% 100%;
+  animation: waveBar var(--beat, 0.6s) ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * -47ms);
+}
+
+@keyframes waveBar {
+  0% {
+    transform: scaleY(0.18);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scaleY(var(--h, 0.6));
+    opacity: 1;
+  }
+}
+
+/* Vài nốt yêu thương trôi ở rìa (không che trái tim) */
+.cinema-love-notes {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cinema-love-notes span {
+  position: absolute;
+  color: rgba(255, 216, 235, 0.5);
+  font-size: 1rem;
+  text-shadow: 0 0 16px rgba(255, 180, 218, 0.6);
+  animation: loveNoteFloat 9s ease-in-out infinite;
+}
+
+.cinema-love-notes span:nth-child(1) {
+  left: 7%;
+  bottom: 16%;
+}
+.cinema-love-notes span:nth-child(2) {
+  left: 16%;
+  top: 22%;
+  animation-delay: 1.4s;
+  color: rgba(255, 232, 186, 0.46);
+}
+.cinema-love-notes span:nth-child(3) {
+  right: 8%;
+  top: 26%;
+  animation-delay: 2.6s;
+}
+.cinema-love-notes span:nth-child(4) {
+  right: 16%;
+  bottom: 20%;
+  animation-delay: 0.8s;
+  color: rgba(226, 204, 255, 0.42);
+}
+.cinema-love-notes span:nth-child(5) {
+  left: 50%;
+  bottom: 8%;
+  animation-delay: 3.4s;
+  opacity: 0.4;
+}
+
+@keyframes loveNoteFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-6deg) scale(0.9);
+    opacity: 0.25;
+  }
+  35% {
+    opacity: 0.8;
+  }
+  60% {
+    transform: translate3d(10px, -26px, 0) rotate(8deg) scale(1.1);
+    opacity: 0.55;
+  }
+}
+
+/* Giai điệu chữ nền khi tim đập: thêm nhịp sáng luân phiên */
+.cinema-beatwords span:nth-child(odd):not(.cinema-beatwords__giant) {
+  animation-name: beatWordAlt;
+}
+
+@keyframes beatWordAlt {
+  0%,
+  100% {
+    transform: scale(1.02) rotate(-1deg);
+    opacity: 0.6;
+  }
+  10% {
+    transform: scale(1.2) rotate(1.5deg);
+    opacity: 1;
+  }
+  36% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+/* Cảnh trái tim: nền tối hơn để hạt nổi */
+.cinema-stage.has-heart {
+  --p1: #180b27;
+  --p2: #3d1e45;
+  --p3: #7a3a5e;
+}
+
+.cinema-stage.has-heart .cinema-sky {
+  opacity: 0.65;
+}
+
+.cinema-stage.has-heart .cinema-vignette {
+  opacity: calc(0.72 + var(--kick) * 0.14);
+}
+
+/* Máy yếu: giữ hiệu ứng chính, bỏ trang trí nặng */
+html[data-lite="true"] .cinema-lightleak,
+html[data-lite="true"] .cinema-love-notes,
+html[data-lite="true"] .cinema-wave {
+  display: none;
+}
+
+html[data-lite="true"] .heart-fx__ring--three {
+  display: none;
+}
+
+@media (max-height: 430px) {
+  .cinema-wave {
+    display: none;
+  }
+  .cinema-letterbox::before,
+  .cinema-letterbox::after {
+    height: 10px;
+  }
+}
+
+
+/* Vệt sáng lướt ngang mỗi khi đổi mốc lyric (chỉ transform + opacity) */
+.cinema-cue-sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 34%;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 240, 247, 0.16) 34%,
+    rgba(255, 221, 240, 0.34) 50%,
+    rgba(255, 240, 247, 0.16) 66%,
+    transparent 100%
+  );
+  transform: translate3d(-140%, 0, 0) skewX(-12deg);
+  animation: cueSweep 0.95s cubic-bezier(0.3, 0, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+
+@keyframes cueSweep {
+  0% {
+    transform: translate3d(-140%, 0, 0) skewX(-12deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(420%, 0, 0) skewX(-12deg);
+    opacity: 0;
+  }
+}
+
+.cinema-cue::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 13%;
+  width: 62px;
+  height: 2px;
+  translate: -50% 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 226, 190, 0.9), transparent);
+  opacity: 0;
+  animation: cueUnderline 0.75s ease-out 0.24s both;
+}
+
+.cinema-cue.is-exiting::after {
+  display: none;
+}
+
+@keyframes cueUnderline {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.2);
+  }
+  45% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(2.4);
+  }
+}
+
+html[data-lite="true"] .cinema-cue-sweep {
+  display: none;
+}
+
+html[data-lite="true"] .cinema-cue::after {
+  animation-duration: 0.4s;
+}
+
+@media (max-height: 430px) {
+  .cinema-cue::after {
+    bottom: 9%;
+    width: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cinema-cue-sweep {
+    display: none;
+  }
+  .cinema-cue::after {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
+
+/* Quầng hồng phía sau trái tim: chỉ opacity, không filter */
+.cinema-stage.has-heart::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: min(72vmin, 560px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 177, 211, 0.22), rgba(220, 140, 205, 0.08) 45%, transparent 70%);
+  pointer-events: none;
+  animation: heartAmbient 1.2s ease-in-out infinite;
+}
+
+@keyframes heartAmbient {
+  0%, 100% {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+  16% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  46% {
+    opacity: 0.68;
+    transform: scale(0.99);
+  }
+}
+
+html[data-lite="true"] .cinema-stage.has-heart::after {
+  animation-duration: 1.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cinema-stage.has-heart::after {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* ============================================================
+   VŨ TRỤ 20/10 — tinh cầu ngọc trai, nền thiên hà, tương tác chạm
+   ============================================================ */
+.cinema-stage {
+  touch-action: none;
+  overscroll-behavior: none;
+  background:
+    radial-gradient(80% 60% at 50% 36%, rgba(112, 56, 120, 0.3), transparent 66%),
+    radial-gradient(70% 60% at 14% 12%, rgba(48, 34, 96, 0.55), transparent 66%),
+    radial-gradient(70% 60% at 86% 88%, rgba(126, 42, 92, 0.4), transparent 68%),
+    linear-gradient(158deg, #04030b 0%, #0b0616 46%, #170a21 100%);
+}
+
+.cinema {
+  overscroll-behavior: none;
+}
+
+.cinema-universe {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cinema-nebula {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: nebulaDrift 34s ease-in-out infinite alternate;
+}
+
+.cinema-nebula--a {
+  width: 66vmax;
+  height: 66vmax;
+  left: -20vmax;
+  top: -18vmax;
+  background: radial-gradient(circle, rgba(88, 108, 224, 0.26), rgba(60, 40, 140, 0.08) 46%, transparent 68%);
+}
+
+.cinema-nebula--b {
+  width: 58vmax;
+  height: 58vmax;
+  right: -18vmax;
+  top: 6vh;
+  background: radial-gradient(circle, rgba(86, 206, 178, 0.16), rgba(52, 140, 120, 0.05) 48%, transparent 70%);
+  animation-delay: 5s;
+}
+
+.cinema-nebula--c {
+  width: 64vmax;
+  height: 64vmax;
+  left: 16vw;
+  bottom: -26vmax;
+  background: radial-gradient(circle, rgba(228, 118, 192, 0.22), rgba(160, 60, 140, 0.06) 46%, transparent 70%);
+  animation-delay: 9s;
+}
+
+.cinema-nebula--d {
+  width: 40vmax;
+  height: 40vmax;
+  right: 14vw;
+  bottom: -12vmax;
+  background: radial-gradient(circle, rgba(255, 178, 120, 0.12), transparent 66%);
+  animation-delay: 13s;
+}
+
+@keyframes nebulaDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(3vmax, -2vh, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-2vmax, 3vh, 0) scale(1.03);
+  }
+}
+
+.cinema-depth-stars {
+  position: absolute;
+  top: -10%;
+  right: -10%;
+  bottom: -10%;
+  left: -10%;
+  background-image:
+    radial-gradient(1.4px 1.4px at 22% 28%, rgba(255, 255, 255, 0.85) 40%, transparent 45%),
+    radial-gradient(1px 1px at 68% 16%, rgba(255, 240, 214, 0.8) 40%, transparent 45%),
+    radial-gradient(1.2px 1.2px at 84% 62%, rgba(255, 255, 255, 0.7) 40%, transparent 45%),
+    radial-gradient(1px 1px at 38% 78%, rgba(255, 220, 240, 0.7) 40%, transparent 45%),
+    radial-gradient(1.6px 1.6px at 12% 84%, rgba(220, 235, 255, 0.7) 40%, transparent 45%);
+  background-size: 340px 300px, 430px 380px, 520px 460px, 400px 350px, 560px 500px;
+  animation: depthStars 26s linear infinite;
+  opacity: 0.75;
+}
+
+@keyframes depthStars {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-40px, -24px, 0);
+  }
+}
+
+.cinema-camera {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  transform-origin: 50% 50%;
+  will-change: transform;
+  transform: perspective(900px) rotateX(0deg) rotateY(0deg) scale(1.06);
+  backface-visibility: hidden;
+}
+
+.cinema-canvas-wrap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  touch-action: none;
+}
+
+/* ---- Cổng vào: tinh cầu ngọc trai ---- */
+.cinema-gate {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4rem;
+  padding: max(2.6rem, env(safe-area-inset-top)) 1rem max(3rem, env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+
+.gate-sphere-wrap {
+  cursor: pointer;
+  position: relative;
+  width: min(58vmin, 360px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  perspective: 700px;
+  transform-style: preserve-3d;
+}
+
+.gate-glow {
+  position: absolute;
+  width: 130%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 176, 216, 0.3), rgba(190, 130, 240, 0.12) 44%, transparent 70%);
+  animation: pearlBreath 3.6s ease-in-out infinite;
+}
+
+.gate-sphere {
+  position: relative;
+  width: 30%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 26%, #ffffff 0%, #ffd9ec 18%, #ffb0d4 34%, #d68cd2 52%, #9b7ce0 68%, #4e5ab8 84%, #241c50 100%);
+  box-shadow:
+    0 0 40px 14px rgba(255, 150, 206, 0.32),
+    inset -10px -12px 26px rgba(44, 20, 88, 0.65),
+    inset 6px 8px 18px rgba(255, 255, 255, 0.42);
+  animation: pearlTurn 18s linear infinite, pearlFloat 5s ease-in-out infinite;
+}
+
+.gate-sphere__shine {
+  position: absolute;
+  top: 14%;
+  left: 18%;
+  width: 38%;
+  height: 26%;
+  border-radius: 50%;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));
+  filter: blur(1px);
+  transform: rotate(-18deg);
+}
+
+@keyframes pearlTurn {
+  0% {
+    filter: hue-rotate(0deg) saturate(1.05);
+  }
+  50% {
+    filter: hue-rotate(26deg) saturate(1.15);
+  }
+  100% {
+    filter: hue-rotate(0deg) saturate(1.05);
+  }
+}
+
+@keyframes pearlFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.02);
+  }
+}
+
+.gate-ring {
+  position: absolute;
+  width: 100%;
+  aspect-ratio: 1;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.gate-ring--0 {
+  transform: translate(-50%, -50%) rotateX(70deg) rotateZ(0deg);
+  animation: gateSpinA 22s linear infinite;
+}
+
+.gate-ring--1 {
+  transform: translate(-50%, -50%) rotateX(58deg) rotateZ(24deg);
+  animation: gateSpinB 30s linear infinite reverse;
+}
+
+.gate-ring--2 {
+  transform: translate(-50%, -50%) rotateX(78deg) rotateZ(-30deg);
+  animation: gateSpinA 38s linear infinite;
+}
+
+@keyframes gateSpinA {
+  from {
+    transform: translate(-50%, -50%) rotateX(70deg) rotateZ(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotateX(70deg) rotateZ(360deg);
+  }
+}
+
+@keyframes gateSpinB {
+  from {
+    transform: translate(-50%, -50%) rotateX(58deg) rotateZ(24deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotateX(58deg) rotateZ(-336deg);
+  }
+}
+
+.gate-ring__char {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(0.46rem, 1.5vw, 0.64rem);
+  letter-spacing: 0;
+  color: rgba(255, 235, 247, 0.82);
+  text-shadow: 0 0 8px rgba(255, 190, 230, 0.6);
+  white-space: pre;
+  transform:
+    translate(-50%, -50%)
+    rotate(var(--a))
+    translateY(calc(var(--r) * -38vmin))
+    rotate(calc(var(--a) * -1));
+}
+
+.gate-ring--1 .gate-ring__char {
+  color: rgba(255, 226, 186, 0.7);
+}
+
+.gate-ring--2 .gate-ring__char {
+  color: rgba(214, 232, 255, 0.62);
+}
+
+.gate-hit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 58px;
+  padding: 0.6rem 1.2rem;
+  color: #ffe8f3;
+}
+
+.gate-hint {
+  font-family: var(--font-display);
+  font-size: clamp(0.86rem, 2.4vw, 1.05rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  animation: gateHintPulse 2.2s ease-in-out infinite;
+}
+
+.gate-hint__note {
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  color: rgba(255, 226, 240, 0.5);
+}
+
+@keyframes gateHintPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* Neo tinh cầu nhỏ trong lúc lyric chạy */
+.cinema-anchor {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: 130px;
+  height: 130px;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.cinema-anchor__glow {
+  position: absolute;
+  width: 200%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 160, 210, 0.2), transparent 66%);
+  animation: pearlBreath 4s ease-in-out infinite;
+}
+
+.cinema-anchor__pearl {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #fff, #ffc7e2 36%, #bd8fe0 70%, #5d4a9e);
+  box-shadow: 0 0 18px 5px rgba(255, 170, 218, 0.4);
+  animation: pearlBreath 3.2s ease-in-out infinite;
+}
+
+.cinema-anchor__ring {
+  position: absolute;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 210, 235, 0.2);
+  transform: rotateX(68deg) rotateY(12deg);
+  animation: anchorRing 12s linear infinite;
+}
+
+@keyframes anchorRing {
+  from {
+    transform: rotateX(68deg) rotateY(12deg) rotateZ(0);
+  }
+  to {
+    transform: rotateX(68deg) rotateY(12deg) rotateZ(360deg);
+  }
+}
+
+/* ---- Ripple khi chạm ---- */
+.cinema-ripples {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cinema-ripple {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 236, 247, 0.8);
+  box-shadow: 0 0 18px rgba(255, 170, 215, 0.7);
+  animation: tapRipple 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cinema-ripple.is-heart {
+  border-color: rgba(255, 196, 226, 0.85);
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-radius: 40% 60% 60% 40% / 45% 45% 55% 55%;
+}
+
+@keyframes tapRipple {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(7);
+  }
+}
+
+.cinema-touch-hint {
+  position: absolute;
+  left: 50%;
+  top: 11%;
+  translate: -50% 0;
+  z-index: 5;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(18, 8, 28, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-family: var(--font-script);
+  font-size: clamp(0.86rem, 2.2vw, 1rem);
+  color: rgba(255, 226, 242, 0.72);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: breathe 3.6s ease-in-out infinite;
+}
+
+/* ---- Chống ngắt giữa từ cho lyric ---- */
+.cue-text {
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: manual;
+  -webkit-hyphens: manual;
+  text-wrap: balance;
+}
+
+.cue-word {
+  display: inline-block;
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
+.cue-word.is-key {
+  white-space: nowrap;
+}
+
+.cue-char {
+  display: inline-block;
+}
+
+.cue-word .cue-char {
+  white-space: pre;
+}
+
+/* Ẩn tàn dư của cổng đếm ngược cũ */
+.cinema-countdown,
+.cinema-prelude,
+.cinema-countdown__ring {
+  display: none !important;
+}
+
+/* ---- Mobile & theme tối ưu ---- */
+@media (max-width: 900px), (max-height: 460px) {
+  .gate-sphere-wrap {
+    width: min(72vmin, 340px);
+  }
+
+  .gate-ring__char {
+    font-size: 0.5rem;
+    transform:
+      translate(-50%, -50%)
+      rotate(var(--a))
+      translateY(calc(var(--r) * -34vmin))
+      rotate(calc(var(--a) * -1));
+  }
+
+  .gate-hint__note {
+    display: none;
+  }
+
+  .cinema-anchor {
+    width: 100px;
+    height: 100px;
+  }
+
+  .cinema-anchor__pearl {
+    width: 20px;
+    height: 20px;
+  }
+
+  .cinema-touch-hint {
+    top: 8%;
+    font-size: 0.78rem;
+  }
+}
+
+html[data-lite="true"] .cinema-depth-stars,
+html[data-lite="true"] .cinema-nebula--b,
+html[data-lite="true"] .cinema-nebula--d {
+  display: none;
+}
+
+html[data-lite="true"] .cinema-nebula {
+  animation: none;
+  opacity: 0.45;
+}
+
+html[data-lite="true"] .gate-sphere,
+html[data-lite="true"] .gate-glow,
+html[data-lite="true"] .cinema-anchor__glow,
+html[data-lite="true"] .cinema-anchor__pearl,
+html[data-lite="true"] .gate-hint,
+html[data-lite="true"] .cinema-touch-hint {
+  animation: none;
+}
+
+html[data-lite="true"] .gate-ring--1 {
+  display: none;
+}
+
+html[data-lite="true"] .gate-sphere {
+  filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cinema-nebula,
+  .cinema-depth-stars,
+  .gate-ring,
+  .gate-sphere,
+  .gate-glow,
+  .gate-hint,
+  .cinema-anchor__glow,
+  .cinema-anchor__pearl,
+  .cinema-anchor__ring,
+  .cinema-touch-hint {
+    animation: none !important;
+  }
+
+  .cinema-ripple {
+    animation-duration: 0.3s;
+  }
+}
+
+
+/* Vòng chữ quanh trái tim (chữ trang trí duy nhất được phép cùng gợi ý chạm) */
+.heart-rings {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: min(92vmin, 660px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+  perspective: 800px;
+  transform-style: preserve-3d;
+}
+
+.heart-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  transform: rotateX(68deg) rotateZ(0deg);
+  animation: heartTextSpin 34s linear infinite;
+}
+
+.heart-ring--1 {
+  inset: 8%;
+  border: 1px solid rgba(255, 220, 240, 0.16);
+  transform: rotateX(58deg) rotateZ(24deg);
+  animation: heartTextSpinB 44s linear infinite reverse;
+}
+
+.heart-ring--2 {
+  inset: -9%;
+  border: 1px solid rgba(255, 232, 190, 0.12);
+  transform: rotateX(76deg) rotateZ(-28deg);
+  animation-duration: 56s;
+}
+
+.heart-ring__char {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  color: rgba(255, 238, 248, 0.72);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(0.4rem, 1.2vw, 0.56rem);
+  letter-spacing: 0.02em;
+  white-space: pre;
+  text-shadow: 0 0 8px rgba(255, 180, 220, 0.6);
+  transform:
+    translate(-50%, -50%)
+    rotate(var(--a))
+    translateY(calc(var(--rr) * -52vmin))
+    rotate(calc(var(--a) * -1));
+}
+
+.heart-ring--1 .heart-ring__char {
+  color: rgba(255, 226, 186, 0.62);
+}
+
+.heart-ring--2 .heart-ring__char {
+  color: rgba(220, 208, 255, 0.55);
+}
+
+@keyframes heartTextSpin {
+  from {
+    transform: rotateX(68deg) rotateZ(0deg);
+  }
+  to {
+    transform: rotateX(68deg) rotateZ(360deg);
+  }
+}
+
+@keyframes heartTextSpinB {
+  from {
+    transform: rotateX(58deg) rotateZ(24deg);
+  }
+  to {
+    transform: rotateX(58deg) rotateZ(-336deg);
+  }
+}
+
+/* Cú punch camera ở 0s */
+.cinema.is-opening .cinema-camera {
+  animation: cameraPunch 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cameraPunch {
+  0% {
+    transform: perspective(900px) rotateX(0deg) rotateY(0deg) scale(1.02);
+  }
+  36% {
+    transform: perspective(900px) rotateX(0deg) rotateY(0deg) scale(1.16);
+  }
+  100% {
+    transform: perspective(900px) rotateX(0deg) rotateY(0deg) scale(1.06);
+  }
+}
+
+html[data-lite="true"] .heart-ring--2 {
+  display: none;
+}
+
+html[data-lite="true"] .heart-ring {
+  animation-duration: 44s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heart-ring {
+    animation: none !important;
+  }
+  .cinema.is-opening .cinema-camera {
+    animation: none;
+  }
+}
+
+
+/* Tinh cầu vỡ thành bụi hồng–trắng rồi thu về quả cầu nhỏ ở tâm */
+.cinema-pearl-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  pointer-events: none;
+}
+
+.cinema-pearl-burst i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff7fc;
+  box-shadow: 0 0 8px 2px rgba(255, 196, 228, 0.8);
+  animation: pearlBurst 1.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i) * 8ms);
+}
+
+.cinema-pearl-burst i:nth-child(3n) {
+  background: #ffc3df;
+  width: 4px;
+  height: 4px;
+}
+
+.cinema-pearl-burst i:nth-child(4n) {
+  background: #ffe6bd;
+}
+
+@keyframes pearlBurst {
+  0% {
+    opacity: 0;
+    transform: rotate(calc(var(--i) * 13.85deg)) translateY(-4px) scale(0.6);
+  }
+  18% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--i) * 13.85deg + 40deg)) translateY(calc(-16vmin - (var(--i) % 5) * 4vmin)) scale(1.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cinema-pearl-burst {
+    display: none;
   }
 }

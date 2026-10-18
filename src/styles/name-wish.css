@@ -1,0 +1,713 @@
+/* name-wish.css — overlay lời chúc: tên bằng hạt, tinh cầu, thiệp thư (có theme cô giáo). */
+.wish-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 220;
+  overflow: hidden;
+  color: #fff4fa;
+  background:
+    radial-gradient(80% 60% at 50% 38%, rgba(116, 63, 128, 0.42), transparent 68%),
+    radial-gradient(70% 60% at 12% 12%, rgba(60, 44, 120, 0.55), transparent 65%),
+    radial-gradient(70% 60% at 88% 86%, rgba(170, 62, 115, 0.4), transparent 68%),
+    linear-gradient(160deg, #0a0618 0%, #170d2c 52%, #301333 100%);
+  animation: wishOverlayIn 0.45s ease both;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+.wish-overlay.is-teacher {
+  background:
+    radial-gradient(80% 60% at 50% 36%, rgba(168, 116, 51, 0.34), transparent 68%),
+    radial-gradient(70% 60% at 10% 10%, rgba(123, 70, 44, 0.45), transparent 66%),
+    radial-gradient(70% 60% at 90% 88%, rgba(190, 88, 96, 0.35), transparent 68%),
+    linear-gradient(160deg, #190d12 0%, #2c1717 50%, #4a2420 100%);
+}
+
+@keyframes wishOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.wish-sky {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.wish-nebula {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.55;
+  animation: wishNebula 26s ease-in-out infinite alternate;
+}
+
+.wish-nebula--one {
+  width: 70vw;
+  height: 70vw;
+  left: -18vw;
+  top: -14vw;
+  background: radial-gradient(circle, rgba(120, 96, 220, 0.28), transparent 68%);
+}
+
+.wish-nebula--two {
+  width: 64vw;
+  height: 64vw;
+  right: -16vw;
+  top: 24vh;
+  background: radial-gradient(circle, rgba(255, 124, 168, 0.22), transparent 68%);
+  animation-delay: 4s;
+}
+
+.wish-nebula--three {
+  width: 52vw;
+  height: 52vw;
+  left: 22vw;
+  bottom: -16vw;
+  background: radial-gradient(circle, rgba(110, 220, 190, 0.12), transparent 70%);
+  animation-delay: 8s;
+}
+
+.is-teacher .wish-nebula--one {
+  background: radial-gradient(circle, rgba(255, 202, 120, 0.24), transparent 68%);
+}
+.is-teacher .wish-nebula--two {
+  background: radial-gradient(circle, rgba(255, 140, 150, 0.22), transparent 68%);
+}
+
+@keyframes wishNebula {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(4vw, -3vh, 0) scale(1.12);
+  }
+}
+
+.wish-sky__star {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff9fd;
+  box-shadow: 0 0 6px 1px rgba(255, 226, 244, 0.55);
+  animation: twinkle 4.2s ease-in-out infinite;
+}
+
+.wish-close {
+  position: absolute;
+  top: max(0.8rem, env(safe-area-inset-top));
+  right: max(0.8rem, env(safe-area-inset-right));
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(20, 8, 30, 0.5);
+  color: #fff3f9;
+  font-size: 1.5rem;
+  line-height: 1;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.wish-close:active {
+  transform: scale(0.94);
+}
+
+.wish-window {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: max(3.4rem, env(safe-area-inset-top)) 1rem max(1.4rem, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.wish-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  text-align: center;
+}
+
+.wish-kicker {
+  font-family: var(--font-script);
+  font-size: clamp(1.7rem, 6vw, 2.6rem);
+  font-weight: 700;
+  color: #ffd6e8;
+  line-height: 1.1;
+  text-shadow: 0 0 26px rgba(255, 174, 214, 0.4);
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: manual;
+}
+
+.is-teacher .wish-kicker {
+  color: #ffe7b0;
+  text-shadow: 0 0 26px rgba(255, 208, 128, 0.42);
+}
+
+.wish-head__date {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(255, 236, 246, 0.48);
+}
+
+.wish-name-stage {
+  position: relative;
+  width: min(94vw, 680px);
+  height: clamp(150px, 28vh, 240px);
+  touch-action: none;
+}
+
+.wish-name-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+.wish-orbitals {
+  position: relative;
+  width: min(86vw, 460px);
+  height: clamp(120px, 22vh, 180px);
+  margin-block: -0.2rem;
+  perspective: 640px;
+  transform-style: preserve-3d;
+}
+
+.wish-pearl {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(38px, 8vw, 56px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, #ffffff 0%, #ffd7ea 22%, #f3a6cb 46%, #b57ccf 72%, #6f5bb5 100%);
+  box-shadow: 0 0 28px 8px rgba(255, 170, 214, 0.35), inset -6px -8px 14px rgba(84, 36, 120, 0.5);
+  animation: pearlBreath 3.6s ease-in-out infinite;
+}
+
+.is-teacher .wish-pearl {
+  background: radial-gradient(circle at 32% 28%, #fffdf3 0%, #ffe9b8 24%, #ffc46f 52%, #e49a63 74%, #b5704f 100%);
+  box-shadow: 0 0 30px 10px rgba(255, 205, 130, 0.38), inset -6px -8px 14px rgba(120, 62, 34, 0.5);
+}
+
+@keyframes pearlBreath {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.wish-orbit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+.wish-orbit > span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  translate: 0 -50%;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(0.48rem, 1.5vw, 0.62rem);
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(255, 230, 244, 0.55);
+  white-space: nowrap;
+}
+
+.wish-orbit--a {
+  transform: translate(-50%, -50%) rotateX(68deg) rotateZ(0deg);
+  animation: orbitFlatA 18s linear infinite;
+  border: 1px solid rgba(255, 226, 243, 0.2);
+  border-radius: 50%;
+}
+
+.wish-orbit--b {
+  width: 84%;
+  height: 84%;
+  transform: translate(-50%, -50%) rotateX(58deg) rotateZ(38deg);
+  animation: orbitFlatB 24s linear infinite reverse;
+  border: 1px dashed rgba(255, 215, 238, 0.16);
+  border-radius: 50%;
+}
+
+.wish-orbit--c {
+  width: 118%;
+  height: 118%;
+  transform: translate(-50%, -50%) rotateX(74deg) rotateZ(-26deg);
+  animation: orbitFlatA 30s linear infinite;
+  border: 1px solid rgba(255, 226, 180, 0.12);
+  border-radius: 50%;
+}
+
+@keyframes orbitFlatA {
+  from {
+    transform: translate(-50%, -50%) rotateX(68deg) rotateZ(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotateX(68deg) rotateZ(360deg);
+  }
+}
+
+@keyframes orbitFlatB {
+  from {
+    transform: translate(-50%, -50%) rotateX(58deg) rotateZ(38deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotateX(58deg) rotateZ(-322deg);
+  }
+}
+
+.wish-heart {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  font-size: 0.6rem;
+  color: #ffb0cf;
+  opacity: 0;
+  animation: wishHeartUp 6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.9s);
+}
+
+.is-teacher .wish-heart {
+  color: #ffd98f;
+}
+
+@keyframes wishHeartUp {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, 0, 0) scale(0.6);
+  }
+  20% {
+    opacity: 0.8;
+  }
+  70% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(-50% + (var(--i) - 3) * 26px), -110px, 0) scale(1.1) rotate(12deg);
+  }
+}
+
+.wish-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.wish-mail-btn,
+.wish-flower-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0.7rem 1.25rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  color: #5d2a3c;
+  background: linear-gradient(135deg, #ffe7f0, #ffc3d9 60%, #ffb0cb);
+  box-shadow: 0 16px 30px -16px rgba(8, 2, 18, 0.75);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.is-teacher .wish-mail-btn,
+.is-teacher .wish-flower-btn {
+  background: linear-gradient(135deg, #fff6dd, #ffe0a5 60%, #ffc98c);
+  color: #6a3f13;
+  border-color: rgba(255, 234, 190, 0.6);
+}
+
+.wish-flower-btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffe3ee;
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.wish-mail-btn:active,
+.wish-flower-btn:active {
+  transform: scale(0.97);
+}
+
+.wish-hint {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: rgba(255, 228, 241, 0.6);
+  font-size: 0.95rem;
+}
+
+/* Thiệp thư */
+.wish-card-backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 8;
+  background: rgba(8, 3, 16, 0.62);
+  animation: wishOverlayIn 0.3s ease both;
+}
+
+.wish-letter-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 9;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  width: min(92vw, 520px);
+  max-height: min(86dvh, 640px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(1.5rem, 4vw, 2.2rem) clamp(1.2rem, 4vw, 1.9rem) 1.2rem;
+  border-radius: 26px;
+  text-align: center;
+  color: #6b3a4a;
+  background:
+    radial-gradient(120% 80% at 12% 0%, rgba(255, 255, 255, 0.95), transparent 56%),
+    linear-gradient(152deg, #fff7fa 0%, #ffe7f0 52%, #ffeef4 100%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 40px 90px -40px rgba(4, 1, 10, 0.9), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  animation: cardUnfold 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: manual;
+}
+
+.is-teacher .wish-letter-card {
+  background:
+    radial-gradient(120% 80% at 12% 0%, rgba(255, 255, 255, 0.96), transparent 56%),
+    linear-gradient(152deg, #fffaf0 0%, #fff1d4 50%, #ffe7d8 100%);
+  border: 2px solid rgba(214, 168, 88, 0.55);
+  box-shadow: 0 0 0 1px rgba(255, 236, 190, 0.6) inset, 0 40px 90px -40px rgba(4, 1, 10, 0.9);
+  color: #6a3f2a;
+}
+
+@keyframes cardUnfold {
+  0% {
+    opacity: 0;
+    transform: scale(0.86) rotate(-3deg) translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0) translateY(0);
+  }
+}
+
+.wish-letter-card__heart {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 0.4rem;
+  border-radius: 50%;
+  background: #ffd0e1;
+  color: #d84a77;
+  font-size: 0.98rem;
+  box-shadow: 0 8px 18px -10px rgba(160, 50, 84, 0.6);
+}
+
+.is-teacher .wish-letter-card__heart {
+  background: #ffe6b8;
+  color: #c58b2f;
+}
+
+.wish-letter-card__title {
+  font-family: var(--font-script);
+  font-size: clamp(1.65rem, 6vw, 2.3rem);
+  font-weight: 700;
+  color: #c03962;
+  line-height: 1.15;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.is-teacher .wish-letter-card__title {
+  color: #b5751f;
+}
+
+.wish-letter-card__to {
+  margin-top: 0.1rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 3.6vw, 1.3rem);
+  font-weight: 700;
+  color: #9a3f5f;
+}
+
+.is-teacher .wish-letter-card__to {
+  color: #8e5a1e;
+}
+
+.wish-letter-card__body {
+  margin-block: 1rem 0.8rem;
+  font-family: var(--font-body);
+  font-size: clamp(0.95rem, 2.6vw, 1.04rem);
+  line-height: 1.85;
+  color: #5f3a46;
+  text-align: left;
+  min-height: 6.4em;
+}
+
+.wish-letter-card__body .w {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.wish-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -0.14em;
+  background: #c03962;
+  animation: cursorBlink 0.9s steps(2, start) infinite;
+}
+
+.is-teacher .wish-caret {
+  background: #b5751f;
+}
+
+.wish-letter-card__sign {
+  font-family: var(--font-script);
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  color: #a33859;
+  text-align: right;
+  line-height: 1.35;
+}
+
+.is-teacher .wish-letter-card__sign {
+  color: #9a641f;
+}
+
+.wish-letter-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed rgba(160, 70, 100, 0.25);
+}
+
+.wish-letter-card__again,
+.wish-letter-card__send,
+.wish-letter-card__close {
+  min-height: 44px;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.wish-letter-card__again {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(190, 90, 125, 0.3);
+  color: #a33859;
+}
+
+.wish-letter-card__send {
+  background: linear-gradient(135deg, #f58aac, #e4577f);
+  color: #fff8fb;
+  box-shadow: 0 12px 24px -14px rgba(180, 55, 95, 0.75);
+}
+
+.wish-letter-card__close {
+  background: transparent;
+  color: rgba(107, 58, 74, 0.6);
+  border: 1px dashed rgba(107, 58, 74, 0.25);
+}
+
+/* Theme cô giáo */
+.wish-overlay.is-teacher .wish-head__date,
+.wish-overlay.is-teacher .wish-kicker {
+  color: #ffedc4;
+}
+
+.wish-bouquet {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  z-index: 4;
+  width: min(76vw, 380px);
+  height: min(50vh, 330px);
+  translate: -50% -50%;
+  pointer-events: none;
+  animation: bouquetBloom 2.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.wish-bouquet__rose {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: 52%;
+  translate: -50% 0;
+  filter: drop-shadow(0 20px 24px rgba(20, 6, 4, 0.5));
+}
+
+.wish-bouquet__rose .rose-svg {
+  animation: roseSway 5s ease-in-out infinite;
+}
+
+.wish-bouquet__a,
+.wish-bouquet__b,
+.wish-bouquet__c {
+  position: absolute;
+  width: 30%;
+}
+
+.wish-bouquet__a {
+  left: 2%;
+  bottom: 18%;
+}
+
+.wish-bouquet__b {
+  right: 2%;
+  bottom: 22%;
+}
+
+.wish-bouquet__c {
+  right: 18%;
+  top: 2%;
+  width: 26%;
+}
+
+.wish-bouquet__note {
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  translate: -50% 0;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 247, 226, 0.95);
+  color: #a4671f;
+  font-size: clamp(0.9rem, 2.4vw, 1.1rem);
+  white-space: nowrap;
+  box-shadow: 0 10px 22px -12px rgba(20, 6, 4, 0.6);
+}
+
+@keyframes bouquetBloom {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@media (max-width: 767px) {
+  .wish-name-stage {
+    height: clamp(130px, 24vh, 190px);
+  }
+
+  .wish-orbitals {
+    height: 116px;
+  }
+
+  .wish-letter-card {
+    width: 94vw;
+    border-radius: 22px;
+  }
+
+  .wish-letter-card__body {
+    font-size: 0.96rem;
+    line-height: 1.8;
+  }
+}
+
+@media (max-height: 700px) {
+  .wish-window {
+    gap: 0.1rem;
+    padding-top: 3.2rem;
+  }
+
+  .wish-name-stage {
+    height: 128px;
+  }
+
+  .wish-orbitals {
+    height: 94px;
+  }
+
+  .wish-close {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wish-nebula,
+  .wish-sky__star,
+  .wish-pearl,
+  .wish-heart,
+  .wish-orbit--a,
+  .wish-orbit--b,
+  .wish-orbit--c,
+  .wish-bouquet__rose .rose-svg {
+    animation: none !important;
+  }
+
+  .wish-letter-card {
+    animation-duration: 0.2s;
+  }
+}
+
+html[data-lite="true"] .wish-nebula,
+html[data-lite="true"] .wish-heart,
+html[data-lite="true"] .wish-orbit--c {
+  display: none;
+}
+
+html[data-lite="true"] .wish-close {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}

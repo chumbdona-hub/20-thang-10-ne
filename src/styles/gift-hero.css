@@ -273,16 +273,32 @@
 .gift-teddy {
   position: absolute;
   z-index: 3;
-  left: -3%;
-  bottom: 2%;
-  width: 31%;
-  filter: drop-shadow(0 12px 18px rgba(122, 52, 78, 0.2));
+  left: -5%;
+  bottom: 0.5%;
+  width: 34%;
   animation: softFloat 5.5s ease-in-out infinite;
 }
 
-.gift-screen .teddy-arm {
-  transform-origin: 40px 150px;
-  animation: teddyWave 2.8s ease-in-out infinite;
+.gift-screen .teddy-arm--wave {
+  animation-duration: 2.4s;
+}
+
+.gift-teddy__bubble {
+  position: absolute;
+  top: -6%;
+  left: 52%;
+  z-index: 4;
+  width: max-content;
+  max-width: 6.5rem;
+  padding: 0.32rem 0.55rem;
+  border-radius: 11px 11px 11px 2px;
+  background: rgba(255, 250, 244, 0.96);
+  color: #a33859;
+  font-size: clamp(0.72rem, 2.2vw, 0.92rem);
+  line-height: 1.1;
+  box-shadow: 0 8px 16px -10px rgba(122, 52, 78, 0.6);
+  transform: rotate(-4deg);
+  animation: softFloat 4.8s ease-in-out infinite;
 }
 
 .gift-box {
@@ -1216,17 +1232,15 @@
 
 .hero-teddy {
   position: absolute;
-  left: -2%;
-  bottom: 2%;
-  width: clamp(78px, 12vw, 132px);
+  left: -3%;
+  bottom: 1%;
+  width: clamp(88px, 13vw, 142px);
   z-index: 4;
-  filter: drop-shadow(0 14px 18px rgba(122, 52, 78, 0.2));
   animation: softFloat 5s ease-in-out infinite;
 }
 
-.hero-teddy .teddy-arm {
-  transform-origin: 40px 150px;
-  animation: teddyWave 2.6s ease-in-out infinite;
+.hero-teddy .teddy-arm--wave {
+  animation-duration: 2.6s;
 }
 
 .balloon {

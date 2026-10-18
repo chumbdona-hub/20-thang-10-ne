@@ -361,3 +361,126 @@ h3 {
     cursor: pointer;
   }
 }
+
+
+/* Gấu chibi dùng chung: vẫy tay, chớp mắt, hoa trên tay khẽ đung đưa */
+.teddy {
+  overflow: visible;
+}
+
+.teddy-arm--wave {
+  transform-box: fill-box;
+  transform-origin: 90% 92%;
+  animation: teddyWave 2.8s ease-in-out infinite;
+}
+
+.teddy-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: teddyBlink 5.6s ease-in-out infinite;
+}
+
+.teddy-flower {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: teddyFlower 4.6s ease-in-out infinite;
+}
+
+.teddy-bow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: teddyBow 4.2s ease-in-out infinite;
+}
+
+.teddy-sparkles {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: teddySparkle 3.4s ease-in-out infinite;
+}
+
+@keyframes teddyBlink {
+  0%, 42%, 46%, 100% {
+    transform: scaleY(1);
+  }
+  44% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes teddyFlower {
+  0%, 100% {
+    transform: rotate(-2.5deg);
+  }
+  50% {
+    transform: rotate(2.5deg);
+  }
+}
+
+@keyframes teddyBow {
+  0%, 100% {
+    transform: rotate(-1.5deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
+  }
+}
+
+@keyframes teddySparkle {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+/* Khung gấu: giữ tỉ lệ mới 200x220 và đổ bóng mềm */
+.teddy {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 12px 16px rgba(122, 52, 78, 0.18));
+}
+
+
+/* ============================================================
+   KHÔNG NGẮT GIỮA TỪ (chỉ xuống dòng tại dấu cách)
+   ============================================================ */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+li,
+blockquote,
+figcaption,
+.lead,
+.section-title,
+.girl-name,
+.letter-line,
+.letter-greeting,
+.finale-title,
+.finale-line,
+.finale-letter__body,
+.finale-letter__to,
+.wish-card__msg,
+.wishes-title,
+.wishes-hint,
+.invite-title,
+.invite-text,
+.name-chip__text,
+.name-form__notice,
+.name-form__hint {
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: manual;
+  -webkit-hyphens: manual;
+}
+
+/* Khối chữ có hiệu ứng: mỗi TỪ nowrap, chữ cái nằm bên trong. */
+.w {
+  display: inline-block;
+  white-space: nowrap;
+}

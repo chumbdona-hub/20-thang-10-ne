@@ -327,7 +327,7 @@ export default function NameWish({ target, onClose }: Props) {
           <span className="wish-photo-pearl__orbit wish-photo-pearl__orbit--two" aria-hidden="true" />
           <span className="wish-photo-pearl__glow" aria-hidden="true" />
           <PhotoFrame
-            name={target.name}
+            name={target.photoName || target.name}
             shape="circle"
             size="full"
             variant={isTeacher ? "gold" : "rose"}
@@ -408,7 +408,7 @@ export default function NameWish({ target, onClose }: Props) {
           <span className="wish-letter-card__heart" aria-hidden="true">♡</span>
           <div className={`wish-polaroid${isTeacher ? " is-teacher" : ""}`} aria-hidden="true">
             <span className="wish-polaroid__tape" />
-            <PhotoFrame name={target.name} shape="square" size="full" variant={isTeacher ? "gold" : "rose"} className="wish-polaroid__photo" />
+            <PhotoFrame name={target.photoName || target.name} shape="square" size="full" variant={isTeacher ? "gold" : "rose"} className="wish-polaroid__photo" />
             <span className="wish-polaroid__caption">{isTeacher ? "Cô giáo của chúng em" : target.name}</span>
           </div>
           <p className="wish-letter-card__title script">

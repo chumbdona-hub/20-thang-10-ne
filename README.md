@@ -1,6 +1,6 @@
 # 20/10 – Một món quà của 11B7 🌸
 
-Một website cuộn kể chuyện (scroll-story) dành tặng **các cô gái lớp 11B7** nhân ngày Phụ nữ Việt Nam 20/10. Trang có hộp quà mở màn, hoa 3D nhiều lớp cánh, thư giấy, ô nhập tên để nhận lời chúc riêng, chòm sao 16 bạn, dải ngân hà lời chúc, một "cảnh phim" vũ trụ với tinh cầu ngọc trai và trái tim hạt 3D, vườn hoa lời chúc và phần kết dưới trời sao.
+Một website cuộn kể chuyện (scroll-story) dành tặng **các cô gái lớp 11B7** nhân ngày Phụ nữ Việt Nam 20/10. Trang có hộp quà mở màn, hoa 3D nhiều lớp cánh, thư giấy, ô nhập tên để nhận lời chúc riêng, chòm sao của lớp, dải ngân hà lời chúc, một "cảnh phim" vũ trụ với tinh cầu ngọc trai và trái tim hạt 3D, vườn hoa lời chúc và phần kết dưới trời sao.
 
 Dự án chạy bằng **React + Vite + CSS thuần**, được chia nhiều file, không dùng `localStorage`, và sẵn sàng đưa lên GitHub Pages.
 
@@ -24,7 +24,7 @@ Dự án chạy bằng **React + Vite + CSS thuần**, được chia nhiều fil
     ├── main.tsx                Điểm khởi động React
     ├── App.tsx                 Lắp ráp nền, màn hình quà, các section, cảnh phim
     ├── data/config.ts          Tên lớp, danh sách bạn, lời chúc, thư kết, bpm…
-    ├── data/wishes.ts          Lời chúc riêng 16 bạn, fallback, bất ngờ cô giáo
+    ├── data/wishes.ts          Lời chúc riêng từng bạn, fallback, bất ngờ cô giáo
     ├── data/lyrics.ts          Nguyên văn phụ đề SRT
     ├── lib/text.ts             Bỏ dấu tiếng Việt, khớp tên, wrapByWords, auto-fit
     ├── lib/nameUtils.ts        Tên gọi, chữ cái avatar, viết hoa tên
@@ -116,7 +116,6 @@ Nếu chỉ muốn xem nhanh bản đã build, có thể mở `dist/index.html` 
 | Họ và tên | Tên file |
 |---|---|
 | Mai Thị Vân Anh | `maithivananh.jpeg` |
-| Nguyễn Thị Tùng Chi | `nguyenthitungchi.jpeg` |
 | Nguyễn Ngọc Diệp | `nguyenngocdiep.jpeg` |
 | Vũ Việt Hà | `vuvietha.jpeg` |
 | Nguyễn Ngọc Hân | `nguyenngochan.jpeg` |
@@ -136,6 +135,8 @@ Nếu chỉ muốn xem nhanh bản đã build, có thể mở `dist/index.html` 
 > Tên file luôn sinh bằng hàm `slug()` trong `src/lib/photos.ts`; bảng trên chỉ để tra nhanh. Nếu sửa danh sách trong `src/data/config.ts`, hãy dùng đúng quy tắc slug. Chạy trang với `?debug` để xem bảng **tên → tên file → có/chưa có ảnh** trong Console.
 >
 > Tên file trong bảng được sinh trực tiếp từ `slug()` của danh sách trong `src/data/config.ts`. Nếu đổi tên bạn nào, mở `?debug` để xem tên file mới.
+
+**Ảnh cô giáo:** đặt file là `hoangthihoa.jpeg` (hoặc `cohoangthihoa.jpeg` cũng được — trang tự thử cả hai). Ảnh **không xuất hiện** trong danh sách, tường, chòm sao hay phim; chỉ hiện khi gõ đúng họ tên cô trong ô nhập ở mục 02. Nếu đã thêm file mà vẫn không thấy ảnh, kiểm tra lần lượt: (1) tên file đúng `hoangthihoa.jpeg`, **không dấu**, chữ thường; (2) file nằm trong `dist/assets/photos/` của bản đang deploy (không chỉ trong `public/`); (3) đã chạy `npm run build` và upload lại `dist/`; (4) mở trang với `?debug` để xem trạng thái; (5) mở Console xem có lỗi 404 với đúng đường dẫn không. Bộ nhớ đệm ảnh có thể giữ kết quả "không có ảnh" trong vài phút — tải lại trang là làm mới.
 
 **Cách thêm:**
 

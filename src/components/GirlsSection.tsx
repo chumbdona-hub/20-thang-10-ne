@@ -214,7 +214,7 @@ export default function GirlsSection({ onCountChange }: Props) {
         </div>
 
         <p className="girls-footnote reveal">
-          <span aria-hidden="true">🫶</span> Không thiếu ai đâu nhé — đủ 16 cô gái của đại gia đình 11B7.
+          <span aria-hidden="true">🫶</span> Không thiếu ai đâu nhé — đủ {CONFIG.girls.length} cô gái của đại gia đình 11B7.
         </p>
       </div>
       <div className="boundary-clouds" aria-hidden="true"><span /><span /></div>

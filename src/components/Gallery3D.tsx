@@ -19,7 +19,7 @@ export default function Gallery3D() {
   const drag = useRef({ active: false, x: 0, startRot: 0, vx: 0, idle: 0 });
   const { items, settled } = useAlbum(CONFIG.girls, visible);
   const lite = isLite();
-  const total = 16;
+  const total = Math.max(1, CONFIG.girls.length);
   const angleStep = 360 / total;
 
   useEffect(() => {

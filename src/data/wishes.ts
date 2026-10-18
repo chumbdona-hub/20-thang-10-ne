@@ -8,6 +8,8 @@ export type WishKind = "girl" | "teacher" | "guest";
 export type WishTarget = {
   id: string;
   name: string;
+  /** Tên dùng để tìm file ảnh; mặc định là name. Cô giáo hiển thị "Cô …" nhưng ảnh là "hoangthihoa". */
+  photoName?: string;
   given: string;
   kind: WishKind;
   wishes: string[];
@@ -22,11 +24,6 @@ export const GIRL_WISHES: Record<string, string[]> = {
     "Vân Anh ơi, chúc cậu 20/10 thật nhiều niềm vui nhỏ xinh. Cảm ơn cậu vì những ngày đến lớp luôn nhẹ nhàng và tử tế. Cứ giữ nụ cười đó mãi nhé.",
     "Chúc Vân Anh luôn tự tin với những điều mình đang làm. Cậu không cần phải vội, cứ đi theo nhịp của riêng mình. Bọn tớ ở đây, cùng cậu.",
     "Mong Vân Anh có một ngày 20/10 thật ấm, được ăn món mình thích và nghe những lời thương nhất. Cảm ơn cậu đã là một phần của 11B7.",
-  ],
-  "Nguyễn Thị Tùng Chi": [
-    "Tùng Chi ơi, chúc cậu ngày 20/10 thật rạng rỡ. Cảm ơn cậu vì những lần giúp lớp mà chẳng ai kịp nhớ để cảm ơn. Mong cậu luôn được thương theo cách dịu dàng nhất.",
-    "Chúc cậu luôn có đủ can đảm để thử điều mình thích. Đừng ngại hỏi, đừng ngại sai, vì cậu đang lớn lên rất đẹp. 20/10 vui nhiều nha.",
-    "Mong những ngày tới của Tùng Chi toàn chuyện vui để kể. Mệt thì nghỉ, buồn thì gọi bọn tớ. Chúc cậu thật nhiều sức khỏe và bình yên.",
   ],
   "Nguyễn Ngọc Diệp": [
     "Diệp ơi, 20/10 chúc cậu luôn xinh, luôn vui và luôn là chính mình. Bọn tớ thích cái cách cậu xuất hiện, nhẹ nhàng mà ai cũng nhớ.",
@@ -158,6 +155,7 @@ export function makeTeacherTarget(): WishTarget {
   return {
     id: "teacher",
     name: TEACHER.displayName,
+    photoName: TEACHER.name,
     given: "cô",
     kind: "teacher",
     wishes: TEACHER_WISHES,

@@ -32,6 +32,15 @@ export function slug(name: string): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
+/** Tên thay thế khi tìm ảnh: cô giáo có thể bị đặt tên kèm/không kèm tiền tố "cô". */
+function nameCandidates(name: string): string[] {
+  const list = [name];
+  const key = slug(name);
+  if (key === "cohoangthihoa") list.push("Hoàng Thị Hoa");
+  if (key === "hoangthihoa") list.push("Cô Hoàng Thị Hoa");
+  return list;
+}
+
 function extList(): string[] {
   const list = CONFIG.photos && CONFIG.photos.ext ? CONFIG.photos.ext : null;
   const out = list ? list.slice() : ["jpeg", "jpg", "png", "webp"];
@@ -127,18 +136,21 @@ async function tryLoad(name: string, size: PhotoSize): Promise<PhotoResult> {
   }
   const maxSide = size === "thumb" ? CONFIG.photos.thumbSide : CONFIG.photos.maxSide;
   const exts = extList();
-  for (let i = 0; i < exts.length; i += 1) {
-    const src = url(name, i);
-    const img = await loadImage(src);
-    if (!img) continue;
-    const scaled = drawScaled(img, maxSide);
-    if (!scaled.ok) continue;
-    scaled.name = name;
-    scaled.slug = slug(name);
-    remember(key, scaled);
-    known.set(slug(name), true);
-    emit(name, scaled);
-    return scaled;
+  const candidates = nameCandidates(name);
+  for (let c = 0; c < candidates.length; c += 1) {
+    for (let i = 0; i < exts.length; i += 1) {
+      const src = url(candidates[c], i);
+      const img = await loadImage(src);
+      if (!img) continue;
+      const scaled = drawScaled(img, maxSide);
+      if (!scaled.ok) continue;
+      scaled.name = name;
+      scaled.slug = slug(name);
+      remember(key, scaled);
+      known.set(slug(name), true);
+      emit(name, scaled);
+      return scaled;
+    }
   }
   // Không có ảnh: ghi nhớ để không thử lại liên tục.
   known.set(slug(name), false);

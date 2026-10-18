@@ -23,7 +23,6 @@ export const CONFIG = {
   teacherInMovie: false,
   girls: [
     "Mai Thị Vân Anh",
-    "Nguyễn Thị Tùng Chi",
     "Nguyễn Ngọc Diệp",
     "Vũ Việt Hà",
     "Nguyễn Ngọc Hân",
@@ -82,7 +81,7 @@ export const CONFIG = {
   introLetter: [
     "Tháng Mười về, gió có vẻ dịu hơn một chút…",
     "Có những ngày bài tập dài, trời âm u, chỉ cần thấy các cậu cười là tự nhiên thấy ổn hơn.",
-    "11B7 có 16 cô gái, mỗi người một kiểu tỏa sáng: có người rực rỡ, có người lặng lẽ mà ấm.",
+    "11B7 có những cô gái, mỗi người một kiểu tỏa sáng: có người rực rỡ, có người lặng lẽ mà ấm.",
     "Bọn tớ không giỏi nói mấy lời hoa mỹ, nên gói hết vào đây: cảm ơn vì đã là một phần thanh xuân của nhau.",
     "20/10 vui vẻ. Và hãy luôn nhớ rằng, các cậu quý giá hơn mọi lời khen.",
   ],

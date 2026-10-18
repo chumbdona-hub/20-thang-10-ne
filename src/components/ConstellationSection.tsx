@@ -1,4 +1,4 @@
-// Section 3.5 — Chòm sao 11B7: 16 ngôi sao nối thành trái tim, chạm để mở lời chúc.
+// Section 3.5 — Chòm sao 11B7: mỗi bạn một ngôi sao, nối thành trái tim, chạm để mở lời chúc.
 import { useEffect, useRef, useState } from "react";
 import { CONFIG } from "../data/config";
 import { makeGirlTarget, type WishTarget } from "../data/wishes";
@@ -121,7 +121,7 @@ export default function ConstellationSection({ onOverlayChange }: { onOverlayCha
             Chòm sao <span className="script constellation-script">11B7</span>
           </h2>
           <p className="lead reveal" style={{ ["--d" as string]: "0.12s" }}>
-            Mười sáu ngôi sao, mỗi bạn một vì tinh tú. Chạm vào một ngôi sao để nhận lá thư riêng — hoặc kéo nhẹ để xoay cả bầu trời.
+            {CONFIG.girls.length} ngôi sao, mỗi bạn một vì tinh tú. Chạm vào một ngôi sao để nhận lá thư riêng — hoặc kéo nhẹ để xoay cả bầu trời.
           </p>
         </header>
 

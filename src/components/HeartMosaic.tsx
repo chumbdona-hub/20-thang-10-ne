@@ -238,7 +238,7 @@ export default function HeartMosaic() {
     <section className="section heart-mosaic" id="heart-mosaic" ref={sectionRef} data-theme-anchor data-mood="wishes" aria-labelledby="heart-mosaic-title">
       <div className="wrap">
         <header className="heart-mosaic__head">
-          <span className="pill reveal"><span className="pill__dot" /> 16 mảnh ghép</span>
+          <span className="pill reveal"><span className="pill__dot" /> {CONFIG.girls.length} mảnh ghép</span>
           <h2 className="section-title reveal" id="heart-mosaic-title" style={{ ["--d" as string]: "0.06s" }}>
             Trái tim của lớp mình <span aria-hidden="true">💗</span>
           </h2>
@@ -269,7 +269,7 @@ export default function HeartMosaic() {
           <p className="heart-mosaic__hint"><span aria-hidden="true">💗</span> chạm vào một ô nhỏ nhé</p>
         </div>
         <p className="heart-mosaic__names">
-          {givenName(CONFIG.girls[0] || "11B7")} · {givenName(CONFIG.girls[7] || "11B7")} · … · cả 16 cô gái của 11B7
+          {givenName(CONFIG.girls[0] || "11B7")} · {givenName(CONFIG.girls[7] || "11B7")} · … · cả {CONFIG.girls.length} cô gái của 11B7
         </p>
       </div>
       {target && <NameWish target={target} onClose={() => setTarget(null)} />}

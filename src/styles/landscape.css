@@ -1,0 +1,822 @@
+/* landscape.css — "cảnh phim" toàn màn hình: lyric typography, đếm ngược, trái tim hạt */
+.cinema {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  overflow: hidden;
+  background: #1b0d2b;
+  color: #fff7fb;
+  touch-action: none;
+  animation: cinemaIn 0.55s ease both;
+}
+
+.cinema.is-closing {
+  animation: cinemaOut 0.65s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes cinemaIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cinemaOut {
+  to {
+    opacity: 0;
+  }
+}
+
+.cinema-rotate {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  transition: transform 0.5s ease;
+}
+
+.cinema.is-forced .cinema-rotate {
+  width: 100dvh;
+  height: 100dvw;
+  left: 50%;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.cinema-stage {
+  --kick: 0;
+  --p1: #24122f;
+  --p2: #5b2a58;
+  --p3: #a8567c;
+  --accent: #ffd6e7;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(150deg, var(--p1) 0%, var(--p2) 48%, var(--p3) 100%);
+  transition: background 0.65s ease;
+  will-change: transform;
+}
+
+.cinema-stage.palette-0 {
+  --p1: #22102f;
+  --p2: #5c2d57;
+  --p3: #b05b80;
+  --accent: #ffd2e4;
+}
+.cinema-stage.palette-1 {
+  --p1: #1b1435;
+  --p2: #493269;
+  --p3: #976f9d;
+  --accent: #ffd7a9;
+}
+.cinema-stage.palette-2 {
+  --p1: #25122a;
+  --p2: #6d3150;
+  --p3: #c2678a;
+  --accent: #d7f5e5;
+}
+.cinema-stage.palette-3 {
+  --p1: #16142e;
+  --p2: #3e3464;
+  --p3: #7c679c;
+  --accent: #e9d4ff;
+}
+.cinema-stage.palette-4 {
+  --p1: #2b1226;
+  --p2: #71304a;
+  --p3: #c06a7e;
+  --accent: #ffe6b8;
+}
+.cinema-stage.palette-5 {
+  --p1: #1e112c;
+  --p2: #553066;
+  --p3: #9c5a8f;
+  --accent: #ffc9dc;
+}
+
+.cinema-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(90% 60% at 50% 24%, rgba(255, 201, 226, 0.14), transparent 62%),
+    radial-gradient(70% 60% at 12% 88%, rgba(151, 109, 220, 0.2), transparent 65%),
+    radial-gradient(80% 55% at 88% 82%, rgba(255, 168, 190, 0.14), transparent 65%);
+  opacity: 0.95;
+}
+
+.cinema-sky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.4px 1.4px at 22% 28%, rgba(255, 255, 255, 0.7) 40%, transparent),
+    radial-gradient(1px 1px at 70% 18%, rgba(255, 240, 212, 0.75) 40%, transparent),
+    radial-gradient(1.2px 1.2px at 84% 62%, rgba(255, 255, 255, 0.6) 40%, transparent),
+    radial-gradient(1px 1px at 38% 76%, rgba(255, 224, 238, 0.6) 40%, transparent);
+  background-size: 380px 320px, 480px 420px, 560px 460px, 420px 380px;
+  opacity: 0.7;
+  animation: cinemaSky 22s ease-in-out infinite alternate;
+}
+
+@keyframes cinemaSky {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.55;
+  }
+  to {
+    transform: translate3d(-14px, 10px, 0) scale(1.04);
+    opacity: 0.8;
+  }
+}
+
+.cinema-canvas-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  touch-action: none;
+  cursor: grab;
+}
+
+.cinema-canvas-wrap:active {
+  cursor: grabbing;
+}
+
+.cinema-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.cinema-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow: inset 0 0 180px 40px rgba(9, 3, 18, 0.55);
+  background: radial-gradient(120% 90% at 50% 50%, transparent 52%, rgba(8, 2, 16, 0.55) 100%);
+  opacity: calc(0.62 + var(--kick) * 0.16);
+  transition: opacity 0.16s ease;
+}
+
+.cinema-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 48%, rgba(255, 248, 252, 0.9), rgba(255, 213, 233, 0.4) 32%, transparent 62%);
+  animation: cinemaFlash 0.95s ease-out forwards;
+}
+
+@keyframes cinemaFlash {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  18% {
+    opacity: 0.55;
+  }
+  55% {
+    opacity: 0.16;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+.cinema-shockwave {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: 20vmin;
+  height: 20vmin;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 235, 246, 0.5);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cinema.is-opening .cinema-shockwave {
+  animation: shockwave 1.3s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+}
+
+.cinema.is-opening .cinema-shockwave::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 208, 234, 0.35);
+}
+
+@keyframes shockwave {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.2);
+  }
+  80% {
+    opacity: 0.06;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(7);
+  }
+}
+
+.cinema-lyrics {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  padding: 6vmin 6vw;
+}
+
+.cinema-cue {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 7vmin 7vw;
+  overflow: hidden;
+  will-change: transform, opacity;
+}
+
+.cue-text {
+  margin: 0;
+  max-width: 88vw;
+  font-family: "Poppins", "Baloo 2", sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.7rem, min(8vw, 15dvh), 5.8rem);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  text-align: center;
+  text-wrap: balance;
+  color: #fff6fb;
+  text-transform: none;
+  text-shadow:
+    0 2px 0 rgba(63, 22, 56, 0.28),
+    0 0 24px rgba(255, 192, 224, 0.4),
+    0 0 60px rgba(219, 124, 190, 0.24);
+}
+
+.cue-text.is-long {
+  font-size: clamp(1.45rem, min(6.4vw, 12.4dvh), 4.9rem);
+}
+
+.cue-word {
+  display: inline;
+  white-space: pre;
+}
+
+.cue-word.is-key {
+  color: #ffe4a8;
+  text-shadow:
+    0 0 18px rgba(255, 221, 158, 0.7),
+    0 0 44px rgba(255, 177, 211, 0.45),
+    0 3px 0 rgba(84, 30, 65, 0.28);
+  font-style: italic;
+  font-weight: 900;
+}
+
+.cue-word.is-key .cue-char {
+  color: inherit;
+}
+
+.cue-char {
+  display: inline-block;
+  white-space: pre;
+}
+
+/* Vào: 10 kiểu khác nhau */
+.cue-enter--slam .cue-text {
+  animation: cueSlam 0.3s cubic-bezier(0.15, 0.9, 0.25, 1.25) both;
+}
+
+@keyframes cueSlam {
+  0% {
+    opacity: 0;
+    transform: scale(2.5) rotate(-2deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.97) rotate(0.4deg);
+  }
+  80% {
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cue-enter--scatter .cue-char {
+  animation: charScatter 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--ci) * 14ms);
+}
+
+@keyframes charScatter {
+  0% {
+    opacity: 0;
+    transform: translate3d(calc((var(--ci) - 12) * 3px), -58px, 0) rotate(calc((var(--ci) - 10) * 3deg)) scale(1.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0) scale(1);
+  }
+}
+
+.cue-enter--flip {
+  perspective: 700px;
+}
+
+.cue-enter--flip .cue-char {
+  animation: charFlip 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--ci) * 12ms);
+  transform-origin: 50% 100%;
+}
+
+@keyframes charFlip {
+  0% {
+    opacity: 0;
+    transform: rotateX(92deg) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateX(0deg) translateY(0);
+  }
+}
+
+.cue-enter--mask .cue-text {
+  animation: maskSlide 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cue-enter--mask .cue-text::after {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 8%;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, transparent, #ffe0ac, transparent);
+  animation: maskSweep 0.62s ease-out 0.1s both;
+}
+
+@keyframes maskSlide {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 70%, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes maskSweep {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+.cue-enter--track .cue-text {
+  animation: trackIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes trackIn {
+  0% {
+    opacity: 0;
+    letter-spacing: 0.3em;
+    transform: scaleX(1.25);
+  }
+  70% {
+    opacity: 1;
+    letter-spacing: -0.01em;
+  }
+  100% {
+    opacity: 1;
+    letter-spacing: -0.025em;
+    transform: scaleX(1);
+  }
+}
+
+.cue-enter--glitch .cue-text {
+  animation: cueGlitch 0.5s steps(2, end) both;
+}
+
+@keyframes cueGlitch {
+  0% {
+    opacity: 0;
+    transform: translate3d(-9px, 0, 0);
+    text-shadow: -4px 0 rgba(255, 87, 150, 0.8), 4px 0 rgba(103, 226, 255, 0.8);
+  }
+  22% {
+    opacity: 1;
+    transform: translate3d(7px, -2px, 0);
+    text-shadow: 3px 0 rgba(255, 87, 150, 0.7), -3px 0 rgba(103, 226, 255, 0.7);
+  }
+  45% {
+    transform: translate3d(-4px, 2px, 0);
+    text-shadow: -2px 0 rgba(255, 87, 150, 0.5), 2px 0 rgba(103, 226, 255, 0.5);
+  }
+  70% {
+    transform: translate3d(2px, 0, 0);
+    text-shadow: none;
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    text-shadow: 0 2px 0 rgba(63, 22, 56, 0.28), 0 0 24px rgba(255, 192, 224, 0.4);
+  }
+}
+
+.cue-enter--zoom .cue-text {
+  animation: cueZoom 0.48s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cueZoom {
+  0% {
+    opacity: 0;
+    transform: scale(3.2);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cue-enter--wave .cue-char {
+  animation: charWaveIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--ci) * 13ms);
+}
+
+@keyframes charWaveIn {
+  0% {
+    opacity: 0;
+    transform: translateY(46px) rotate(8deg);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(-7px) rotate(-2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+}
+
+.cinema-cue.cue-enter--wave .cue-char {
+  animation: charWaveIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both, charWaveLoop 2.2s ease-in-out infinite;
+  animation-delay: calc(var(--ci) * 13ms), calc(var(--ci) * 40ms + 0.5s);
+}
+
+@keyframes charWaveLoop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.cue-enter--word .cue-word {
+  animation: wordPop 0.4s cubic-bezier(0.18, 1.25, 0.4, 1) both;
+  animation-delay: calc(var(--wi) * 90ms);
+}
+
+@keyframes wordPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.cue-enter--elastic .cue-text {
+  animation: elasticIn 0.55s cubic-bezier(0.18, 1.3, 0.4, 1) both;
+}
+
+.cue-enter--elastic .cue-char:nth-child(2n) {
+  color: #ffe4b0;
+}
+
+@keyframes elasticIn {
+  0% {
+    opacity: 0;
+    transform: rotate(-13deg) scale(0.72);
+  }
+  55% {
+    opacity: 1;
+    transform: rotate(4deg) scale(1.06);
+  }
+  78% {
+    transform: rotate(-1.5deg) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+/* Thoát nhanh, chồng mép với lời kế tiếp */
+.cinema-cue.is-exiting {
+  z-index: 3;
+}
+
+.cue-exit--burst .cue-text {
+  animation: exitBurst 0.26s ease-in both;
+}
+.cue-exit--up .cue-text {
+  animation: exitUp 0.26s ease-in both;
+}
+.cue-exit--fall .cue-text {
+  animation: exitFall 0.3s ease-in both;
+}
+.cue-exit--dust .cue-text {
+  animation: exitDust 0.26s ease-in both;
+}
+.cue-exit--whip .cue-text {
+  animation: exitWhip 0.24s ease-in both;
+}
+
+@keyframes exitBurst {
+  to {
+    opacity: 0;
+    transform: scale(1.65);
+  }
+}
+@keyframes exitUp {
+  to {
+    opacity: 0;
+    transform: translate3d(0, -80%, 0) scale(0.92);
+  }
+}
+@keyframes exitFall {
+  to {
+    opacity: 0;
+    transform: translate3d(0, 80%, 0) rotate(8deg);
+  }
+}
+@keyframes exitDust {
+  to {
+    opacity: 0;
+    transform: scale(0.72);
+    text-shadow: 0 0 30px rgba(255, 214, 234, 0.8);
+  }
+}
+@keyframes exitWhip {
+  to {
+    opacity: 0;
+    transform: translate3d(70%, 0, 0) scaleX(0.4);
+  }
+}
+
+/* Đếm ngược */
+.cinema-countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: radial-gradient(60% 60% at 50% 50%, rgba(255, 210, 233, 0.12), transparent 70%);
+}
+
+.cinema-countdown__caption {
+  font-size: clamp(0.6rem, 1.4vw, 0.76rem);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 240, 248, 0.74);
+}
+
+.cinema-countdown__number {
+  font-family: "Poppins", sans-serif;
+  font-weight: 900;
+  font-size: clamp(5rem, 22vmin, 12rem);
+  line-height: 1;
+  color: #fff5fa;
+  text-shadow: 0 0 40px rgba(255, 192, 222, 0.5), 0 16px 30px rgba(21, 6, 28, 0.4);
+  animation: countPop 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes countPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+}
+
+.cinema-countdown__ring {
+  position: absolute;
+  width: min(42vmin, 320px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 226, 241, 0.3);
+  animation: haloSpin 18s linear infinite;
+}
+
+.cinema-countdown__ring::after {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 226, 241, 0.14);
+}
+
+/* Lớp xoay ngang */
+.cinema-portrait {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.55rem;
+  padding: 2rem 1.5rem;
+  color: #6b3a4a;
+  background:
+    radial-gradient(70% 60% at 50% 20%, rgba(255, 255, 255, 0.8), transparent 70%),
+    linear-gradient(158deg, #ffe3ec 0%, #ffd6e0 52%, #fff1e6 100%);
+  animation: cinemaIn 0.5s ease both;
+}
+
+.cinema.is-forced .cinema-portrait {
+  display: none;
+}
+
+.cinema-portrait__kicker {
+  font-size: 0.6rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #b7385d;
+}
+
+.cinema-phone {
+  width: clamp(90px, 18vmin, 140px);
+  color: #b7385d;
+  animation: phoneRotate 3.2s ease-in-out infinite;
+  transform-origin: 50% 55%;
+  margin-block: 0.3rem;
+}
+
+@keyframes phoneRotate {
+  0%,
+  18% {
+    transform: rotate(0deg);
+  }
+  45%,
+  75% {
+    transform: rotate(-90deg);
+  }
+  95%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.cinema-portrait__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.15rem, 3.4vw, 1.6rem);
+  letter-spacing: -0.02em;
+  color: #5f2f40;
+  max-width: 22rem;
+}
+
+.cinema-portrait__text {
+  font-size: clamp(0.8rem, 2.5vw, 0.92rem);
+  line-height: 1.6;
+  color: rgba(107, 58, 74, 0.72);
+  max-width: 20rem;
+}
+
+.cinema-portrait__fallback {
+  min-height: 46px;
+  margin-top: 0.7rem;
+  padding: 0.7rem 1.25rem;
+  border-radius: 999px;
+  background: #b7385d;
+  color: #fff8fb;
+  font-size: 0.84rem;
+  font-weight: 700;
+  box-shadow: 0 14px 28px -14px rgba(150, 45, 80, 0.7);
+}
+
+.cinema-portrait__skip {
+  min-height: 44px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.72rem;
+  color: rgba(107, 58, 74, 0.55);
+  border-bottom: 1px dashed rgba(107, 58, 74, 0.3);
+}
+
+.cinema-skip {
+  position: absolute;
+  top: max(0.9rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 30;
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(20, 8, 30, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 242, 249, 0.62);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+.cinema-skip:hover {
+  color: #fff;
+}
+
+.cinema-progress {
+  position: absolute;
+  left: 50%;
+  bottom: max(1.1rem, env(safe-area-inset-bottom));
+  translate: -50% 0;
+  z-index: 5;
+  width: min(22vw, 160px);
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+
+.cinema-progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(255, 219, 237, 0.4), #ffe2ae);
+}
+
+.cinema-drag-hint {
+  position: absolute;
+  left: 50%;
+  bottom: max(1.6rem, env(safe-area-inset-bottom));
+  translate: -50% 0;
+  z-index: 6;
+  margin: 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 240, 248, 0.34);
+  pointer-events: none;
+}
+
+@media (max-height: 430px) {
+  .cue-text {
+    font-size: clamp(1.4rem, min(7.4vw, 14dvh), 4.2rem);
+  }
+  .cue-text.is-long {
+    font-size: clamp(1.2rem, min(6vw, 11.6dvh), 3.6rem);
+  }
+  .cinema-cue {
+    padding: 4vmin 7vw;
+  }
+  .cinema-drag-hint {
+    display: none;
+  }
+  .cinema-countdown__number {
+    font-size: clamp(4rem, 26vmin, 8rem);
+  }
+}

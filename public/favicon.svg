@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFE3EC"/>
+      <stop offset="100%" stop-color="#FFB6C8"/>
+    </linearGradient>
+    <linearGradient id="petal" x1="0" y1="1" x2="0.6" y2="0">
+      <stop offset="0%" stop-color="#F47FA5"/>
+      <stop offset="100%" stop-color="#FFF1F5"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <g transform="translate(32 31)">
+    <ellipse cx="0" cy="-13" rx="8.5" ry="13" fill="url(#petal)"/>
+    <ellipse cx="0" cy="-13" rx="8.5" ry="13" fill="url(#petal)" transform="rotate(72)"/>
+    <ellipse cx="0" cy="-13" rx="8.5" ry="13" fill="url(#petal)" transform="rotate(144)"/>
+    <ellipse cx="0" cy="-13" rx="8.5" ry="13" fill="url(#petal)" transform="rotate(216)"/>
+    <ellipse cx="0" cy="-13" rx="8.5" ry="13" fill="url(#petal)" transform="rotate(288)"/>
+    <circle cx="0" cy="0" r="6.2" fill="#FFD98F"/>
+    <circle cx="0" cy="0" r="3" fill="#F2B663"/>
+  </g>
+  <path d="M27 57c3-5 7-7 12-7-1 5-5 8-11 8" fill="#8FC0A2"/>
+</svg>

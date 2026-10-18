@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#FFD6E0" />
+    <meta
+      name="description"
+      content="Món quà số của lớp 11B7 gửi đến 16 cô gái nhân ngày Phụ nữ Việt Nam 20/10: một câu chuyện cuộn 3D, thật nhiều hoa và những lời thương."
+    />
+    <title>20/10 – 11B7</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Dancing+Script:wght@500;600;700&family=Poppins:wght@600;700;800;900&family=Quicksand:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html.is-loading,
+      body.is-booting { margin: 0; background: #2b1739; overflow: hidden; }
+      #boot { position: fixed; inset: 0; z-index: 999; display: grid; place-items: center; background: linear-gradient(158deg, #2b1739, #4a2346 45%, #7c3a5d 80%, #b25a78); color: #fff4f8; font-family: "Quicksand", system-ui, sans-serif; }
+      #boot .boot__caption { letter-spacing: 0.12em; font-size: 12px; margin-top: 14px; text-align: center; }
+    </style>
+  </head>
+  <body class="is-booting">
+    <div id="root"></div>
+
+    <!-- Loader tĩnh: hiện ngay, không chờ JS của ứng dụng -->
+    <div id="boot" role="status" aria-live="polite" aria-label="Đang gói quà">
+      <div class="boot__reveal"></div>
+      <div class="boot__brand">11B7 · Ngày của những cô gái · 20.10</div>
+      <button class="boot__skip" id="bootSkip" type="button" aria-label="Vào trang ngay">Bỏ qua</button>
+      <div class="boot__core">
+        <div class="boot__wishes" id="bootWishes" aria-hidden="true"></div>
+        <div class="boot__star-wrap">
+          <span class="boot__ring"></span>
+          <span class="boot__ring"></span>
+          <span class="boot__ring"></span>
+          <span class="boot__glow"></span>
+          <svg class="boot__star" viewBox="0 0 64 64" aria-hidden="true">
+            <defs>
+              <radialGradient id="bootStarGrad" cx="50%" cy="42%" r="60%">
+                <stop offset="0%" stop-color="#fffdf6" />
+                <stop offset="55%" stop-color="#ffe1ee" />
+                <stop offset="100%" stop-color="#ffc0da" />
+              </radialGradient>
+            </defs>
+            <path d="M32 2 C35 21 43 29 62 32 C43 35 35 43 32 62 C29 43 21 35 2 32 C21 29 29 21 32 2Z" fill="url(#bootStarGrad)" />
+            <circle cx="32" cy="32" r="4.6" fill="#fffdf6" opacity="0.9" />
+          </svg>
+          <span class="boot__spark" style="left: 8%; top: 28%"></span>
+          <span class="boot__spark" style="right: 4%; top: 58%; animation-delay: 1s"></span>
+          <span class="boot__spark" style="left: 42%; bottom: 2%; animation-delay: 1.8s"></span>
+        </div>
+      </div>
+      <div class="boot__footer">
+        <div class="boot__track" aria-hidden="true"><div class="boot__fill" id="bootFill"></div></div>
+        <p class="boot__caption">Đang gói quà… 💐</p>
+        <p class="boot__sub">chờ bọn tớ thêm một chút nhé</p>
+      </div>
+    </div>
+
+    <noscript>
+      <div style="position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 2rem; text-align: center; background: #ffe3ec; color: #6b3a4a">
+        <p>Trang cần bật JavaScript để mở món quà nhỏ này. Bật JavaScript rồi tải lại nhé! 🌸</p>
+      </div>
+    </noscript>
+
+    <script>
+      (function () {
+        "use strict";
+        var boot = document.getElementById("boot");
+        if (!boot) return;
+        document.documentElement.classList.add("is-loading");
+        var fill = document.getElementById("bootFill");
+        var wishesLayer = document.getElementById("bootWishes");
+        var skip = document.getElementById("bootSkip");
+        var start = performance.now();
+        var MIN = 3600;
+        var MAX = 7200;
+        var ready = false;
+        var fontsReady = false;
+        var leaving = false;
+        var progress = 8;
+        var wishIndex = Math.floor(Math.random() * 10);
+        var wishes = [
+          "Cậu cứ cười tươi thế nhé!",
+          "Cảm ơn vì đã là một phần thanh xuân.",
+          "Hôm nay cậu xinh hết phần thiên hạ.",
+          "Mong cậu gặp thật nhiều điều tử tế.",
+          "Cậu xứng đáng với những điều dịu dàng.",
+          "11B7 tự hào vì có cậu.",
+          "Đừng quên yêu bản thân mình nhé.",
+          "Một chút thương gửi riêng cậu.",
+          "Cậu là phiên bản giới hạn của riêng cậu.",
+          "20/10 thật vui và thật ấm nha."
+        ];
+        var colors = ["#ffe3ee", "#ffd6a8", "#d8c8ff", "#bfeedd", "#ffc2d8", "#fff2c9"];
+        var lanes = [
+          { x: -32, y: -30, r: -7 },
+          { x: 34, y: -22, r: 6 },
+          { x: -38, y: 14, r: 5 },
+          { x: 36, y: 22, r: -5 },
+          { x: -16, y: -38, r: 3 },
+          { x: 18, y: 36, r: -4 },
+          { x: -40, y: -4, r: -6 },
+          { x: 44, y: 4, r: 7 },
+          { x: -20, y: 34, r: -3 },
+          { x: 24, y: -36, r: 4 }
+        ];
+
+        function spawnWish() {
+          if (leaving || !wishesLayer) return;
+          var active = wishesLayer.querySelectorAll(".boot-wish");
+          if (active.length >= 6) active[0].remove();
+          var lane = lanes[wishIndex % lanes.length];
+          var text = wishes[wishIndex % wishes.length];
+          wishIndex += 1;
+          var el = document.createElement("p");
+          el.className = "boot-wish";
+          el.style.setProperty("--dx", lane.x + "vw");
+          el.style.setProperty("--dy", lane.y + "vh");
+          el.style.setProperty("--rot", lane.r + "deg");
+          el.style.setProperty("--wc", colors[wishIndex % colors.length]);
+          el.style.animationDelay = "0s";
+          for (var i = 0; i < text.length; i += 1) {
+            var span = document.createElement("span");
+            span.textContent = text.charAt(i);
+            span.style.setProperty("--ci", String(i));
+            el.appendChild(span);
+          }
+          wishesLayer.appendChild(el);
+          window.setTimeout(function () {
+            if (el.parentNode) el.parentNode.removeChild(el);
+          }, 4700);
+        }
+
+        function setProgress(value) {
+          progress = Math.max(progress, value);
+          if (fill) fill.style.width = Math.min(100, progress) + "%";
+        }
+
+        for (var i = 0; i < 3; i += 1) {
+          window.setTimeout(spawnWish, i * 520);
+        }
+        var spawnTimer = window.setInterval(spawnWish, 760);
+        var progressTimer = window.setInterval(function () {
+          setProgress(progress + Math.random() * 4 + 0.6);
+        }, 260);
+        if (fill) fill.style.width = "8%";
+
+        if (document.fonts && document.fonts.ready) {
+          Promise.resolve(document.fonts.ready)
+            .then(function () {
+              fontsReady = true;
+              setProgress(58);
+            })
+            .catch(function () {
+              fontsReady = true;
+            });
+        } else {
+          fontsReady = true;
+        }
+
+        function finish(force) {
+          if (leaving) return;
+          leaving = true;
+          window.clearInterval(spawnTimer);
+          window.clearInterval(progressTimer);
+          setProgress(100);
+          if (!force) document.documentElement.classList.remove("is-loading");
+          window.setTimeout(function () {
+            boot.classList.add("is-leaving");
+          }, force ? 0 : 260);
+          window.setTimeout(function () {
+            if (boot.parentNode) boot.parentNode.removeChild(boot);
+            document.documentElement.classList.remove("is-loading");
+            document.body.classList.remove("is-booting");
+            window.dispatchEvent(new Event("boot-finished"));
+          }, force ? 350 : 1500);
+        }
+
+        function check() {
+          var elapsed = performance.now() - start;
+          if (elapsed > MAX) return finish(true);
+          if (ready && fontsReady && elapsed >= MIN) return finish(false);
+          window.setTimeout(check, 220);
+        }
+
+        window.addEventListener("app-ready", function () {
+          ready = true;
+          setProgress(96);
+        });
+        window.addEventListener("load", function () {
+          setProgress(72);
+        });
+        if (skip) skip.addEventListener("click", function () { finish(false); });
+        window.setTimeout(check, 400);
+        window.setTimeout(function () { finish(true); }, MAX + 120);
+        document.body.classList.add("is-booting");
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

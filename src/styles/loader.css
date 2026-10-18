@@ -1,0 +1,314 @@
+/* loader.css — màn hình "Đang gói quà", hiện ngay trước khi React kịp tải */
+#boot {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #fff4f8;
+  font-family: "Quicksand", "Nunito", system-ui, sans-serif;
+  background:
+    radial-gradient(90% 70% at 50% 46%, rgba(146, 92, 156, 0.48), transparent 70%),
+    radial-gradient(80% 60% at 18% 12%, rgba(90, 49, 105, 0.75), transparent 70%),
+    linear-gradient(158deg, #2b1739 0%, #4a2346 42%, #7c3a5d 78%, #b25a78 100%);
+  isolation: isolate;
+}
+
+#boot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.055;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+.boot__brand {
+  position: absolute;
+  top: max(1.6rem, env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.66rem;
+  letter-spacing: 0.34em;
+  font-weight: 700;
+  color: rgba(255, 238, 246, 0.62);
+  text-transform: uppercase;
+}
+
+.boot__core {
+  position: relative;
+  width: min(86vw, 540px);
+  min-height: min(64svh, 470px);
+  display: grid;
+  place-items: center;
+}
+
+.boot__star-wrap {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+}
+
+.boot__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 231, 243, 0.22);
+}
+
+.boot__ring:nth-child(2) {
+  inset: 18px;
+  border-style: dashed;
+  border-color: rgba(255, 231, 243, 0.16);
+  animation: bootSpin 22s linear infinite;
+}
+
+.boot__ring:nth-child(3) {
+  inset: 38px;
+  border-color: rgba(255, 231, 243, 0.12);
+}
+
+@keyframes bootSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.boot__glow {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 208, 231, 0.5), rgba(255, 188, 222, 0.12) 45%, transparent 70%);
+  animation: bootBreath 3.6s ease-in-out infinite;
+}
+
+.boot__star {
+  width: 52px;
+  height: 52px;
+  position: relative;
+  animation: bootBreath 3.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 16px rgba(255, 220, 238, 0.7));
+}
+
+.boot__spark {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ffe9f3;
+  box-shadow: 0 0 8px 2px rgba(255, 214, 235, 0.5);
+  animation: bootBreath 3s ease-in-out infinite;
+}
+
+@keyframes bootBreath {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+.boot__wishes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  perspective: 700px;
+}
+
+.boot-wish {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max-content;
+  max-width: 46vw;
+  margin: 0;
+  font-family: "Dancing Script", "Baloo 2", cursive;
+  font-size: clamp(0.95rem, 2.5vw, 1.32rem);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--wc, #ffe3ee);
+  text-shadow: 0 0 12px rgba(255, 196, 226, 0.55), 0 6px 22px rgba(40, 14, 40, 0.4);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: bootWishFly 4.4s cubic-bezier(0.22, 0.7, 0.3, 1) forwards;
+}
+
+.boot-wish span {
+  display: inline-block;
+  opacity: 0;
+  animation: bootChar 0.5s ease forwards;
+  animation-delay: calc(var(--ci) * 20ms + 180ms);
+}
+
+@keyframes bootChar {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes bootWishFly {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, -50%, 0) scale(0.14) rotate(calc(var(--rot) * 0.4));
+    filter: blur(3px);
+  }
+  12% {
+    opacity: 0.95;
+  }
+  42% {
+    opacity: 0.92;
+    transform: translate3d(calc(-50% + var(--dx) * 0.44), calc(-50% + var(--dy) * 0.44), 0) scale(0.92)
+      rotate(var(--rot));
+    filter: blur(0);
+  }
+  76% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(-50% + var(--dx) * 1.15), calc(-50% + var(--dy) * 1.15), 0) scale(1.18)
+      rotate(calc(var(--rot) * 1.1));
+    filter: blur(2px);
+  }
+}
+
+.boot__footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: max(1.5rem, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  padding-inline: 1.4rem;
+}
+
+.boot__track {
+  width: min(230px, 62vw);
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+
+.boot__fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffd0e4, #ffb0ce, #ffe4bc);
+  box-shadow: 0 0 14px rgba(255, 194, 223, 0.7);
+  transition: width 0.5s ease;
+}
+
+.boot__caption {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: rgba(255, 238, 246, 0.78);
+}
+
+.boot__sub {
+  font-family: "Dancing Script", cursive;
+  font-size: 0.95rem;
+  color: rgba(255, 228, 241, 0.55);
+}
+
+.boot__reveal {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(155deg, #ffb6c8 0%, #ffd6e0 48%, #fff1e6 100%);
+  clip-path: circle(0% at 50% 52%);
+  transition: clip-path 1.15s cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+#boot.is-leaving {
+  pointer-events: none;
+}
+
+#boot.is-leaving .boot__reveal {
+  clip-path: circle(150% at 50% 52%);
+  z-index: 4;
+}
+
+#boot.is-leaving .boot__brand,
+#boot.is-leaving .boot__core,
+#boot.is-leaving .boot__footer {
+  opacity: 0;
+  transform: translate3d(0, -8px, 0);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+#boot.is-leaving .boot-wish {
+  animation: bootWishOut 0.5s ease forwards;
+}
+
+@keyframes bootWishOut {
+  to {
+    opacity: 0;
+    transform: translate3d(-50%, -50%, 0) scale(1.5);
+    filter: blur(5px);
+  }
+}
+
+.boot__skip {
+  position: absolute;
+  top: max(1.2rem, env(safe-area-inset-top));
+  right: 1.2rem;
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  color: rgba(255, 238, 246, 0.5);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: transparent;
+}
+
+@media (max-width: 480px) {
+  .boot-wish {
+    max-width: 62vw;
+    font-size: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-wish {
+    animation-duration: 0.5s;
+    filter: none !important;
+  }
+  .boot__glow,
+  .boot__star,
+  .boot__spark,
+  .boot__ring {
+    animation: none;
+  }
+  .boot__reveal {
+    transition: opacity 0.6s ease;
+    clip-path: none;
+    opacity: 0;
+    background: linear-gradient(155deg, #ffb6c8 0%, #ffd6e0 48%, #fff1e6 100%);
+  }
+  #boot.is-leaving .boot__reveal {
+    clip-path: none;
+    opacity: 1;
+  }
+}
